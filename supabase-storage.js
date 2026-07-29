@@ -14,7 +14,6 @@ window.musicStorage = {
       method: 'POST',
       headers: {
         apikey: config.anonKey,
-        Authorization: `Bearer ${config.anonKey}`,
         'Content-Type': file.type || 'audio/mpeg',
         'x-upsert': 'true'
       },
@@ -38,8 +37,7 @@ window.musicStorage = {
     const response = await fetch(endpoint, {
       method: 'DELETE',
       headers: {
-        apikey: config.anonKey,
-        Authorization: `Bearer ${config.anonKey}`
+        apikey: config.anonKey
       }
     });
     if (!response.ok) {
@@ -56,7 +54,6 @@ window.musicStorage = {
       method: 'POST',
       headers: {
         apikey: config.anonKey,
-        Authorization: `Bearer ${config.anonKey}`,
         'Content-Type': 'application/json',
         Prefer: 'resolution=merge-duplicates,return=minimal'
       },
@@ -70,7 +67,7 @@ window.musicStorage = {
     const config = window.SUPABASE_CONFIG;
     const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/student_scores?select=student_number,stage,score,hints_used,updated_at&order=stage.asc,score.desc`;
     const response = await fetch(endpoint, {
-      headers: { apikey: config.anonKey, Authorization: `Bearer ${config.anonKey}` }
+      headers: { apikey: config.anonKey }
     });
     if (!response.ok) throw new Error(`학생 점수 조회 실패 (${response.status})`);
     return response.json();
