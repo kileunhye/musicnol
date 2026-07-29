@@ -556,12 +556,9 @@ renderSync = function () {
   }
 };
 
-function teacherAccessGranted() { return sessionStorage.getItem('musicnol-teacher-authenticated') === 'true'; }
 function requireTeacherAccess(openScreen) {
-  if (teacherAccessGranted()) return openScreen();
   const password = window.prompt('교사로 시작하려면 교사 비밀번호를 입력하세요.');
   if (password === '1234') {
-    sessionStorage.setItem('musicnol-teacher-authenticated', 'true');
     openScreen();
   } else if (password !== null) {
     alert('비밀번호가 올바르지 않습니다.');
