@@ -215,7 +215,12 @@ async function saveContent(successMessage = '') {
   if (content.quizLyric && content.quizBlank) {
     await window.musicStorage?.upsertQuizContent({ lyric: content.quizLyric, blankText: content.quizBlank });
     const quizSaveButton = document.querySelector('#save-quiz-lyric');
-    if (quizSaveButton) { quizSaveButton.textContent = '저장 완료'; quizSaveButton.disabled = true; }
+    if (quizSaveButton) {
+      quizSaveButton.textContent = '저장 완료';
+      quizSaveButton.disabled = true;
+      quizSaveButton.classList.remove('btn-primary');
+      quizSaveButton.classList.add('btn-success');
+    }
   }
   alert(successMessage || (window.musicStorage?.isConfigured() ? '음원을 Supabase Storage에 업로드하고 수업 자료를 저장했습니다.' : '현재는 로컬 임시 저장입니다. Supabase 설정 후 Storage 업로드가 활성화됩니다.'));
 }
@@ -486,7 +491,7 @@ function renderTeacher02Simple() {
   const updatePreview = () => { const text = document.querySelector('#lyrics').value.trim(); const hidden = document.querySelector('#quiz-blank').value.trim(); document.querySelector('#quiz-preview-text').textContent = blankedLyric(text, hidden) || text || '가사를 입력하면 미리보기가 표시됩니다.'; };
   document.querySelector('#lyrics').addEventListener('input', updatePreview);
   document.querySelector('#quiz-blank').addEventListener('input', updatePreview);
-  const resetQuizSaveState = () => { const button = document.querySelector('#save-quiz-lyric'); if (button) { button.textContent = '문제 가사 저장하기'; button.disabled = false; } };
+  const resetQuizSaveState = () => { const button = document.querySelector('#save-quiz-lyric'); if (button) { button.textContent = '문제 가사 저장하기'; button.disabled = false; button.classList.remove('btn-success'); button.classList.add('btn-primary'); } };
   document.querySelector('#lyrics').addEventListener('input', resetQuizSaveState);
   document.querySelector('#quiz-blank').addEventListener('input', resetQuizSaveState);
   document.querySelector('#save-quiz-lyric').addEventListener('click', async () => { const text = document.querySelector('#lyrics').value.trim(); const hidden = document.querySelector('#quiz-blank').value.trim(); if (!text) return alert('문제 출제 가사 한 줄을 입력해주세요.'); if (!hidden || !text.includes(hidden)) return alert('전체 가사 안에 포함된 비울 부분을 입력해주세요.'); c.quizLyric = text; c.quizBlank = hidden; c.lyrics = [{ ...(c.lyrics?.[0] || {}), text, blankText: hidden, start: c.lyrics?.[0]?.start || 0, end: c.lyrics?.[0]?.end || 4 }]; c.quizLineIndex = 0; c.quizStages = [{ stage: 1, lyricIndex: 0 }]; await saveContent('문제 가사가 저장되었습니다.'); });
