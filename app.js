@@ -170,6 +170,7 @@ function renderQuizArea(c, target) {
   const stageButtons = [1, 2, 3].map(stage => `<button class="btn ${state.quizStage === stage ? 'btn-primary' : 'btn-secondary'} student-stage-button" data-stage="${stage}">${stage}단계</button>`).join('');
   const lyricBoard = c.lyrics.map((line, index) => { const visible = visibility === 'hide-question' && index !== quizIndex; const text = line.noLyrics ? '♪ 간주 중' : visible ? line.text : '？ ？ ？'; return `<div class="student-lyric-line ${index === quizIndex ? 'question-line' : ''}">${escapeHTML(text)}</div>`; }).join('');
   area.innerHTML = `<section class="lyric-stage"><div><div class="eyebrow" style="color:#b9c9ff">Step 2 · 가사 맞히기</div><div class="current">${state.wrong ? '이 가사의 부분을 입력해보세요' : '교사가 지정한 가사를 맞혀보세요'}</div><div class="next">${state.wrong ? '틀렸어요. 힌트를 하나 골라 다시 도전하세요.' : '1단계 정답은 10점입니다.'}</div></div></section><section class="quiz-card"><div class="stage-tabs"><strong>학습 단계</strong>${stageButtons}</div><div class="student-lyric-board"><div class="small">${visibility === 'hide-all' ? '이번 단계는 가사를 보지 않고 문제를 풀어요.' : '문제 구간만 가려져 있어요.'}</div>${lyricBoard}</div><h3>가사 입력</h3><input id="lyric-answer" class="field-input" placeholder="들었던 가사를 입력하세요" value="${escapeHTML(state.selectedAnswer)}" /><div class="actions"><button class="btn btn-primary" data-action="submit-lyric">정답 제출</button></div>${state.wrong ? `<div class="notice" style="margin-top:15px"><strong>랜덤 힌트</strong> · 아래 힌트 중 하나를 선택하세요.</div><div class="hero-actions">${hints}</div>${hintResult}` : ''}</section><div class="score-card"><div><strong>나의 점수</strong><div class="small">힌트를 사용하면 학습은 계속할 수 있지만 1단계 10점은 한 번만 지급됩니다.</div></div><span class="score">${state.score} pt</span></div>`;
+  area.querySelector('.stage-tabs')?.remove();
   bindActions(); document.querySelector('#lyric-answer').addEventListener('input', e => state.selectedAnswer = e.target.value);
   document.querySelectorAll('.hint-button').forEach(b => b.addEventListener('click', () => useHint(b.dataset.hint, c)));
   document.querySelectorAll('.student-stage-button').forEach(b => b.addEventListener('click', () => { state.quizStage = Number(b.dataset.stage); state.selectedAnswer = ''; state.wrong = false; state.usedHints = []; state.hintOrder = []; renderStudent(); }));
@@ -296,6 +297,7 @@ function renderTeacher02Only() {
 
 const renderStudentScreen = renderStudent;
 renderStudent = function () {
+  state.quizStage = 1;
   renderStudentScreen();
   const content = contentForStudent();
   const audio = document.querySelector('#student-audio');
@@ -316,7 +318,21 @@ renderTeacher = function () {
   }
 };
 
-const renderSyncScreen = renderTeacher02Only;
+function renderTeacher02Simple() {
+  setAccount('교사 체험 계정');
+  const c = state.teacherContent || (state.teacherContent = {});
+  const existing = c.lyrics?.[0] || {};
+  const lyric = c.quizLyric || existing.text || '';
+  const blank = c.quizBlank || existing.blankText || '';
+  app.innerHTML = `<a href="#" class="back" data-action="teacher">← 음악 등록으로</a><div class="section-head"><div><div class="eyebrow">Teacher studio / 02</div><h2>문제 출제 가사 만들기</h2><p>문제 음원에 해당하는 가사 한 줄과 비워낼 부분을 입력합니다.</p></div><span class="tag">문제 출제 전용</span></div><section class="panel problem-lyrics-panel single-quiz-lyrics"><div class="problem-audio-note"><strong>문제 출제용 음원</strong><span>${escapeHTML(c.quizFileName || 'Teacher studio 01에서 문제용 음원을 먼저 등록하세요.')}</span></div><div class="field full"><label for="lyrics">문제 출제 가사 한 줄</label><textarea id="lyrics" rows="3" placeholder="예: 동해물과 백두산이 마르고 닳도록">${escapeHTML(lyric)}</textarea></div><div class="field full"><label for="quiz-blank">문제로 비울 부분</label><input id="quiz-blank" type="text" placeholder="예: 마르고 닳도록" value="${escapeHTML(blank)}" /><p class="small">입력한 부분이 학생 화면에서 빈칸으로 표시됩니다.</p></div><div class="quiz-preview"><strong>학생 화면 미리보기</strong><span id="quiz-preview-text">${escapeHTML(blankedLyric(lyric, blank) || lyric || '가사를 입력하면 미리보기가 표시됩니다.')}</span></div><div class="actions"><button class="btn btn-primary" id="save-quiz-lyric">문제 가사 저장하기</button></div></section>`;
+  const updatePreview = () => { const text = document.querySelector('#lyrics').value.trim(); const hidden = document.querySelector('#quiz-blank').value.trim(); document.querySelector('#quiz-preview-text').textContent = blankedLyric(text, hidden) || text || '가사를 입력하면 미리보기가 표시됩니다.'; };
+  document.querySelector('#lyrics').addEventListener('input', updatePreview);
+  document.querySelector('#quiz-blank').addEventListener('input', updatePreview);
+  document.querySelector('#save-quiz-lyric').addEventListener('click', async () => { const text = document.querySelector('#lyrics').value.trim(); const hidden = document.querySelector('#quiz-blank').value.trim(); if (!text) return alert('문제 출제 가사 한 줄을 입력해주세요.'); if (!hidden || !text.includes(hidden)) return alert('전체 가사 안에 포함된 비울 부분을 입력해주세요.'); c.quizLyric = text; c.quizBlank = hidden; c.lyrics = [{ ...(c.lyrics?.[0] || {}), text, blankText: hidden, start: c.lyrics?.[0]?.start || 0, end: c.lyrics?.[0]?.end || 4 }]; c.quizLineIndex = 0; c.quizStages = [{ stage: 1, lyricIndex: 0 }]; await saveContent(); });
+  bindActions();
+}
+
+const renderSyncScreen = renderTeacher02Simple;
 renderSync = function () {
   renderSyncScreen();
   const syncHelp = document.querySelector('.sync-help');
