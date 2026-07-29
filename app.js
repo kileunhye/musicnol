@@ -162,7 +162,7 @@ function renderStudent() {
   bindActions(); const audio = document.querySelector('#student-audio'); audio.addEventListener('timeupdate', () => { document.querySelector('#student-progress').style.width = audio.duration ? `${audio.currentTime / audio.duration * 100}%` : '0%'; const lines = c.lyrics; const index = lines.findIndex((line, i) => audio.currentTime >= line.start && audio.currentTime < (lines[i + 1]?.start ?? line.end ?? Infinity)); const current = index < 0 ? lines[0] : lines[index]; const next = lines[(index < 0 ? 0 : index) + 1]; document.querySelector('#student-progress').title = current?.noLyrics ? '♪ 간주 중' : (current?.text || ''); }); if (state.listeningComplete) renderQuizArea(c, target); if (state.celebration) setTimeout(() => { state.celebration = false; document.querySelector('.celebration-banner')?.classList.add('is-leaving'); }, 3200);
 }
 
-+function renderQuizArea(c, target) {
+function renderQuizArea(c, target) {
   const area = document.querySelector('#quiz-area'); if (!area) return;
   const visibility = stageVisibility(c); const quizIndex = activeQuizIndex(c);
   const hints = state.hintOrder.map(type => `<button class="btn btn-ghost hint-button" data-hint="${type}">${type === 'space' ? '1. 띄어쓰기 보기' : type === 'initial' ? '2. 초성 보기' : '3. 0.75배속으로 듣기'}</button>`).join('');
@@ -277,6 +277,23 @@ function submitLyricWithBlank() {
 renderQuizArea = renderQuizAreaWithBlanks;
 submitLyric = submitLyricWithBlank;
 
+function renderTeacher02Only() {
+  setAccount('교사 체험 계정');
+  const c = state.teacherContent || (state.teacherContent = {});
+  c.lyrics ||= [];
+  app.innerHTML = `<a href="#" class="back" data-action="teacher">← 음악 등록으로</a><div class="section-head"><div><div class="eyebrow">Teacher studio / 02</div><h2>문제 출제 가사 만들기</h2><p>전체 가사를 입력한 뒤, 학생에게 비워서 보여줄 부분을 정합니다.</p></div><span class="tag">문제 출제 전용</span></div><section class="panel problem-lyrics-panel"><div class="problem-audio-note"><strong>문제 출제용 음원</strong><span>${escapeHTML(c.quizFileName || 'Teacher studio 01에서 문제용 음원을 먼저 등록하세요.')}</span></div><h3>문제용 전체 가사</h3><p class="small">한 줄에 한 프레이즈씩 입력하세요.</p><textarea id="lyrics" placeholder="동해물과 백두산이\n마르고 닳도록\n하느님이 보우하사\n우리나라 만세">${escapeHTML(c.lyrics.map(line => line.text).join('\n'))}</textarea><button class="btn btn-secondary" id="build-lyrics">가사 줄 만들기</button><div class="stage-tabs problem-stage-tabs"><strong>문제 단계</strong>${[1,2,3].map(stage => `<button class="btn ${state.quizStage === stage ? 'btn-primary' : 'btn-secondary'} stage-button" data-stage="${stage}">${stage}단계</button>`).join('')}<span class="small">${state.quizStage}단계 문제를 지정합니다.</span></div><div id="problem-lyric-list" class="problem-lyric-list"></div><div class="actions"><button class="btn btn-primary" data-action="save-content">문제 가사 저장하기</button></div></section>`;
+  const renderProblemLines = () => {
+    const list = document.querySelector('#problem-lyric-list');
+    list.innerHTML = c.lyrics.map((line, index) => `<div class="problem-lyric-item"><div class="problem-lyric-top"><span class="line-number">${index + 1}</span><strong>${escapeHTML(line.text)}</strong><button class="btn btn-ghost stage-quiz-button" data-index="${index}">${getStageConfig(c, state.quizStage).lyricIndex === index ? `${state.quizStage}단계 지정됨` : `${state.quizStage}단계 문제로 지정`}</button></div><label>문제로 비울 부분</label><input class="blank-text-input" data-index="${index}" placeholder="예: 마르고 닳도록" value="${escapeHTML(line.blankText || '')}" /><div class="small preview-text">${escapeHTML(blankedLyric(line.text, line.blankText) || line.text)}</div></div>`).join('');
+    list.querySelectorAll('.blank-text-input').forEach(input => input.addEventListener('input', e => { c.lyrics[Number(e.target.dataset.index)].blankText = e.target.value.trim(); e.target.nextElementSibling.textContent = blankedLyric(c.lyrics[Number(e.target.dataset.index)].text, e.target.value.trim()) || c.lyrics[Number(e.target.dataset.index)].text; }));
+    list.querySelectorAll('.stage-quiz-button').forEach(button => button.addEventListener('click', () => { const index = Number(button.dataset.index); const stages = getQuizStages(c).filter(item => item.stage !== state.quizStage); stages.push({ stage: state.quizStage, lyricIndex: index, visibility: getStageConfig(c, state.quizStage).visibility }); c.quizStages = stages.sort((a, b) => a.stage - b.stage); c.quizLineIndex = c.quizStages.find(item => item.stage === 1)?.lyricIndex ?? index; renderProblemLines(); }));
+  };
+  const buildLyrics = () => { const texts = document.querySelector('#lyrics').value.split('\n').map(text => text.trim()).filter(Boolean); c.lyrics = texts.map((text, index) => c.lyrics[index] ? { ...c.lyrics[index], text } : { text, start: index * 4, end: index * 4 + 4 }); renderProblemLines(); };
+  document.querySelector('#build-lyrics').addEventListener('click', buildLyrics);
+  document.querySelectorAll('.stage-button').forEach(button => button.addEventListener('click', () => { buildLyrics(); state.quizStage = Number(button.dataset.stage); renderSync(); }));
+  renderProblemLines(); bindActions();
+}
+
 const renderStudentScreen = renderStudent;
 renderStudent = function () {
   renderStudentScreen();
@@ -299,7 +316,7 @@ renderTeacher = function () {
   }
 };
 
-const renderSyncScreen = renderSync;
+const renderSyncScreen = renderTeacher02Only;
 renderSync = function () {
   renderSyncScreen();
   const syncHelp = document.querySelector('.sync-help');
