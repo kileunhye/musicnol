@@ -464,7 +464,7 @@ renderStudent = function () {
 };
 
 const renderTeacherScreen = renderTeacher01;
-renderTeacher = function () {
+renderTeacher = function () { requireTeacherAccess(renderTeacher02Simple); return;
   renderTeacherScreen();
   document.querySelector('[data-action="ai-analyze"]')?.remove();
   const back = document.querySelector('.back[data-action="home"]');
@@ -595,7 +595,7 @@ function renderTeacher() { requireTeacherAccess(renderTeacherUnlocked); }
 function renderMelodyTeacher() { requireTeacherAccess(renderMelodyTeacherUnlocked); }
 
 document.addEventListener('click', event => {
-  if (event.target.closest('[data-action="teacher-home"]')) requireTeacherAccess(renderTeacherUnlocked);
+  if (event.target.closest('[data-action="teacher-home"]')) requireTeacherAccess(renderTeacher02Simple);
 });
 
 document.addEventListener('click', event => {
