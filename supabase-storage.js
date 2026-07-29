@@ -58,7 +58,10 @@ window.musicStorage = {
       },
       body: JSON.stringify(record)
     });
-    if (!response.ok) throw new Error(`학생 점수 저장 실패 (${response.status})`);
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`학생 점수 저장 실패 (${response.status})${detail ? `\n${detail}` : ''}`);
+    }
   },
 
   async listStudentScores() {

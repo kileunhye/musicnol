@@ -147,8 +147,8 @@ function renderStudentEntry() {
 }
 
 function leaderboardHTML() {
-  const records = getLeaderboard(); if (!records.length) return '<div class="empty">아직 기록이 없어요. 첫 번째 주인공이 되어보세요!</div>';
-  return `<div class="record-table"><div class="record-row record-head"><span>${state.quizStage}단계 순위</span><span>학생 번호</span><span>점수</span></div>${records.map((record, index) => `<div class="record-row ${record.studentNumber === state.studentNumber ? 'mine' : ''}"><strong>${index + 1}</strong><span>${escapeHTML(record.studentNumber)}번 ${record.studentNumber === state.studentNumber ? '<em>나</em>' : ''}</span><strong>${recordStageScore(record, state.quizStage)} pt</strong></div>`).join('')}</div>`;
+  const records = getOverallLeaderboard(); if (!records.length) return '<div class="empty">아직 기록이 없어요. 첫 번째 주인공이 되어보세요!</div>';
+  return `<div class="record-table"><div class="record-row record-head"><span>전체 순위</span><span>학생 번호</span><span>총점</span></div>${records.map((record, index) => `<div class="record-row ${record.studentNumber === state.studentNumber ? 'mine' : ''}"><strong>${index + 1}</strong><span>${escapeHTML(record.studentNumber)}번 ${record.studentNumber === state.studentNumber ? '<em>나</em>' : ''}</span><strong>${Number(record.score) || 0} pt</strong></div>`).join('')}</div>`;
 }
 
 async function enterStudent() {

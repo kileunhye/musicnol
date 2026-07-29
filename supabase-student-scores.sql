@@ -1,11 +1,15 @@
 create table if not exists public.student_scores (
   student_number text not null,
   stage integer not null check (stage between 1 and 3),
-  score integer not null default 0 check (score between 0 and 10),
+  score integer not null default 0 check (score between 0 and 1000),
   hints_used integer not null default 0 check (hints_used between 0 and 3),
   updated_at timestamptz not null default now(),
   primary key (student_number, stage)
 );
+
+-- 기존 테이블이 예전 MVP의 0~10점 제한으로 만들어졌다면 제한을 합산 점수에 맞게 변경합니다.
+alter table public.student_scores drop constraint if exists student_scores_score_check;
+alter table public.student_scores add constraint student_scores_score_check check (score between 0 and 1000);
 
 alter table public.student_scores enable row level security;
 
