@@ -160,4 +160,24 @@ function renderSync() {
   document.querySelectorAll('.restart-end').forEach(input => input.addEventListener('change', e => { const i = Number(e.target.closest('.lyric-row').dataset.index); pushSyncHistory(); c.lyrics[i].end = Number(e.target.value); }));
   document.querySelectorAll('.delete-segment-button').forEach(button => button.addEventListener('click', () => deleteSegment(Number(button.dataset.index))));
 }
+const renderTeacherScreen = renderTeacher;
+renderTeacher = function () {
+  renderTeacherScreen();
+  const back = document.querySelector('.back[data-action="home"]');
+  if (back) {
+    back.textContent = '← 이전으로';
+    back.classList.add('btn', 'btn-secondary');
+  }
+};
+
+const renderSyncScreen = renderSync;
+renderSync = function () {
+  renderSyncScreen();
+  const back = document.querySelector('.back[data-action="teacher"]');
+  if (back) {
+    back.textContent = '← 이전으로';
+    back.classList.add('btn', 'btn-secondary');
+  }
+};
+
 renderHome();
