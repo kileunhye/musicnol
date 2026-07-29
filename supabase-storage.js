@@ -101,6 +101,32 @@ window.musicStorage = {
     if (!response.ok) throw new Error(`수업 콘텐츠 저장 실패 (${response.status})`);
   },
 
+  async getQuizContent() {
+    if (!this.isConfigured()) return null;
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/quiz_content?id=eq.1&select=lyric,blank_text,updated_at`;
+    const response = await fetch(endpoint, { headers: { apikey: config.anonKey } });
+    if (!response.ok) throw new Error(`문제 가사 조회 실패 (${response.status})`);
+    const rows = await response.json();
+    return rows[0] || null;
+  },
+
+  async upsertQuizContent(content) {
+    if (!this.isConfigured()) return;
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/quiz_content?on_conflict=id`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        apikey: config.anonKey,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({ id: 1, lyric: content.lyric, blank_text: content.blankText, updated_at: new Date().toISOString() })
+    });
+    if (!response.ok) throw new Error(`문제 가사 저장 실패 (${response.status})`);
+  },
+
   async listMelodyRecords() {
     if (!this.isConfigured()) return [];
     const config = window.SUPABASE_CONFIG;

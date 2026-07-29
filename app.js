@@ -45,6 +45,13 @@ async function syncRemoteContent() {
     const remote = await window.musicStorage.getClassContent();
     if (remote) { state.teacherContent = remote; localStorage.setItem('musicnol-content', JSON.stringify(remote)); }
     else if (state.teacherContent) await window.musicStorage.upsertClassContent({ ...state.teacherContent, melodyContent: state.melodyContent || undefined });
+    const quiz = await window.musicStorage.getQuizContent();
+    if (quiz?.lyric) {
+      const current = state.teacherContent || {};
+      const first = current.lyrics?.[0] || {};
+      state.teacherContent = { ...current, quizLyric: quiz.lyric, quizBlank: quiz.blank_text, lyrics: [{ ...first, text: quiz.lyric, blankText: quiz.blank_text, start: first.start || 0, end: first.end || 4 }] };
+      localStorage.setItem('musicnol-content', JSON.stringify(state.teacherContent));
+    }
   } catch (error) { console.warn(error); }
 }
 async function syncRemoteMelodyContent() {
@@ -205,6 +212,7 @@ async function saveContent(successMessage = '') {
   state.teacherContent = content;
   localStorage.setItem('musicnol-content', JSON.stringify(content));
   await window.musicStorage?.upsertClassContent({ ...content, melodyContent: state.melodyContent || undefined });
+  if (content.quizLyric && content.quizBlank) await window.musicStorage?.upsertQuizContent({ lyric: content.quizLyric, blankText: content.quizBlank });
   alert(successMessage || (window.musicStorage?.isConfigured() ? '음원을 Supabase Storage에 업로드하고 수업 자료를 저장했습니다.' : '현재는 로컬 임시 저장입니다. Supabase 설정 후 Storage 업로드가 활성화됩니다.'));
 }
 

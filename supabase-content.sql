@@ -18,6 +18,27 @@ drop policy if exists "Anyone can update class content" on public.class_content;
 create policy "Anyone can update class content"
 on public.class_content for update to anon, authenticated using (true) with check (true);
 
+create table if not exists public.quiz_content (
+  id integer primary key check (id = 1),
+  lyric text not null,
+  blank_text text not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.quiz_content enable row level security;
+
+drop policy if exists "Anyone can view quiz content" on public.quiz_content;
+create policy "Anyone can view quiz content"
+on public.quiz_content for select to anon, authenticated using (true);
+
+drop policy if exists "Anyone can save quiz content" on public.quiz_content;
+create policy "Anyone can save quiz content"
+on public.quiz_content for insert to anon, authenticated with check (true);
+
+drop policy if exists "Anyone can update quiz content" on public.quiz_content;
+create policy "Anyone can update quiz content"
+on public.quiz_content for update to anon, authenticated using (true) with check (true);
+
 create table if not exists public.melody_records (
   student_number text primary key,
   elapsed numeric not null check (elapsed >= 0),
