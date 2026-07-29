@@ -27,6 +27,21 @@ window.musicStorage = {
     };
   },
 
+  async deleteAudio(path) {
+    if (!this.isConfigured()) return;
+    if (!path) return;
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/storage/v1/object/${encodeURIComponent(config.bucket)}/${path.split('/').map(encodeURIComponent).join('/')}`;
+    const response = await fetch(endpoint, {
+      method: 'DELETE',
+      headers: {
+        apikey: config.anonKey,
+        Authorization: `Bearer ${config.anonKey}`
+      }
+    });
+    if (!response.ok) throw new Error(`Storage 음원 삭제 실패 (${response.status}). Supabase Storage DELETE 정책을 확인해주세요.`);
+  },
+
   async upsertStudentScore(record) {
     if (!this.isConfigured()) return;
     const config = window.SUPABASE_CONFIG;

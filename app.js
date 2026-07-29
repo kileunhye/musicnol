@@ -48,6 +48,31 @@ function stageVisibility(content, stage = state.quizStage) { return getStageConf
 function cloneContent(content) { return JSON.parse(JSON.stringify(content)); }
 function pushSyncHistory() { if (state.teacherContent) state.syncHistory.push(cloneContent(state.teacherContent)); if (state.syncHistory.length > 20) state.syncHistory.shift(); }
 function undoSync() { const previous = state.syncHistory.pop(); if (!previous) return alert('되돌릴 작업이 없습니다.'); state.teacherContent = previous; renderSync(); }
+async function resetSyncAndAudio() {
+  const content = state.teacherContent;
+  if (!content) return;
+  if (!confirm('싱크를 초기화하고 Supabase에 저장된 기존 음원도 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+  pushSyncHistory();
+  try {
+    if (content.audioPath && window.musicStorage?.isConfigured()) await window.musicStorage.deleteAudio(content.audioPath);
+    if (content.audioUrl?.startsWith('blob:')) URL.revokeObjectURL(content.audioUrl);
+    state.pendingFile = null;
+    content.audioPath = '';
+    content.audioUrl = '';
+    content.fileName = '';
+    content.lyrics.forEach((line, i) => {
+      line.start = i * 4;
+      line.end = i * 4 + 4;
+    });
+    state.teacherContent = content;
+    localStorage.setItem('musicnol-content', JSON.stringify(content));
+    renderSync();
+    alert('싱크와 기존 음원을 초기화했습니다.');
+  } catch (error) {
+    state.syncHistory.pop();
+    alert(error.message || '음원 삭제에 실패했습니다.');
+  }
+}
 function getDraft() {
   const previous = state.teacherContent || {};
   const lines = document.querySelector('#lyrics').value.split('\n').map(x => x.trim()).filter(Boolean);
@@ -173,6 +198,16 @@ renderTeacher = function () {
 const renderSyncScreen = renderSync;
 renderSync = function () {
   renderSyncScreen();
+  const audioBox = document.querySelector('.audio-box');
+  if (audioBox && !document.querySelector('[data-action="reset-sync-audio"]')) {
+    const resetButton = document.createElement('button');
+    resetButton.type = 'button';
+    resetButton.className = 'btn btn-danger';
+    resetButton.dataset.action = 'reset-sync-audio';
+    resetButton.textContent = '싱크 초기화 및 음원 삭제';
+    resetButton.addEventListener('click', resetSyncAndAudio);
+    audioBox.appendChild(resetButton);
+  }
   const back = document.querySelector('.back[data-action="teacher"]');
   if (back) {
     back.textContent = '← 이전으로';
