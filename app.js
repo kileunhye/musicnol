@@ -220,6 +220,25 @@ renderSync = function () {
   renderSyncScreen();
   const syncHelp = document.querySelector('.sync-help');
   if (syncHelp) syncHelp.textContent = '아래 시간 입력칸에서 앞뒤 시간을 조금씩 조정할 수 있습니다.';
+  const timeReadout = document.querySelector('#sync-time');
+  if (timeReadout && !document.querySelector('.manual-sync-controls')) {
+    const controls = document.createElement('div');
+    controls.className = 'sync-controls manual-sync-controls';
+    controls.innerHTML = '<button class="btn btn-primary" type="button">현재 시점 → 첫 가사 시작</button><button class="btn btn-secondary" type="button">현재 시점 → 첫 프레이즈 끝</button>';
+    controls.children[0].addEventListener('click', () => setFirstPhrasePoint('start'));
+    controls.children[1].addEventListener('click', () => setFirstPhrasePoint('end'));
+    timeReadout.insertAdjacentElement('afterend', controls);
+  }
+  const phraseSetup = document.querySelectorAll('.sync-setup')[1];
+  if (phraseSetup && !phraseSetup.querySelector('[data-action="auto-sync"]')) {
+    const autoButton = document.createElement('button');
+    autoButton.type = 'button';
+    autoButton.className = 'btn btn-ghost';
+    autoButton.dataset.action = 'auto-sync';
+    autoButton.textContent = '같은 박자로 전체 배치';
+    autoButton.addEventListener('click', autoSyncLyrics);
+    phraseSetup.appendChild(autoButton);
+  }
   const audioBox = document.querySelector('.audio-box');
   document.querySelector('[data-action="reset-sync-audio"]')?.remove();
   if (audioBox && !document.querySelector('[data-action="reset-sync-only"]')) {
