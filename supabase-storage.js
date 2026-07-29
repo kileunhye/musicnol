@@ -73,5 +73,56 @@ window.musicStorage = {
     });
     if (!response.ok) throw new Error(`학생 점수 조회 실패 (${response.status})`);
     return response.json();
+  },
+
+  async getClassContent() {
+    if (!this.isConfigured()) return null;
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/class_content?id=eq.1&select=content`;
+    const response = await fetch(endpoint, { headers: { apikey: config.anonKey } });
+    if (!response.ok) throw new Error(`수업 콘텐츠 조회 실패 (${response.status})`);
+    const rows = await response.json();
+    return rows[0]?.content || null;
+  },
+
+  async upsertClassContent(content) {
+    if (!this.isConfigured()) return;
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/class_content?on_conflict=id`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        apikey: config.anonKey,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({ id: 1, content, updated_at: new Date().toISOString() })
+    });
+    if (!response.ok) throw new Error(`수업 콘텐츠 저장 실패 (${response.status})`);
+  },
+
+  async listMelodyRecords() {
+    if (!this.isConfigured()) return [];
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/melody_records?select=student_number,elapsed,updated_at&order=elapsed.asc,student_number.asc`;
+    const response = await fetch(endpoint, { headers: { apikey: config.anonKey } });
+    if (!response.ok) throw new Error(`멜로디 기록 조회 실패 (${response.status})`);
+    return response.json();
+  },
+
+  async upsertMelodyRecord(record) {
+    if (!this.isConfigured()) return;
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/melody_records?on_conflict=student_number`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        apikey: config.anonKey,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify(record)
+    });
+    if (!response.ok) throw new Error(`멜로디 기록 저장 실패 (${response.status})`);
   }
 };

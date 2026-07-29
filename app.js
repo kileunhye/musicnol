@@ -37,6 +37,23 @@ function renderHome() {
 }
 
 function getMelodyRecords() { return JSON.parse(localStorage.getItem('musicnol-melody-records') || '[]'); }
+async function syncRemoteContent() {
+  if (!window.musicStorage?.isConfigured()) return;
+  try {
+    const remote = await window.musicStorage.getClassContent();
+    if (remote) { state.teacherContent = remote; localStorage.setItem('musicnol-content', JSON.stringify(remote)); }
+    else if (state.teacherContent) await window.musicStorage.upsertClassContent({ ...state.teacherContent, melodyContent: state.melodyContent || undefined });
+  } catch (error) { console.warn(error); }
+}
+async function syncRemoteMelodyContent() {
+  if (!window.musicStorage?.isConfigured()) return;
+  try {
+    const remote = await window.musicStorage.getClassContent();
+    if (remote?.melodyContent) { state.melodyContent = remote.melodyContent; localStorage.setItem('musicnol-melody', JSON.stringify(remote.melodyContent)); }
+    const rows = await window.musicStorage.listMelodyRecords();
+    localStorage.setItem('musicnol-melody-records', JSON.stringify(rows.map(row => ({ studentNumber: String(row.student_number), elapsed: Number(row.elapsed), updatedAt: row.updated_at }))));
+  } catch (error) { console.warn(error); }
+}
 function melodyLeaderboard() { return getMelodyRecords().sort((a, b) => a.elapsed - b.elapsed || a.studentNumber.localeCompare(b.studentNumber, undefined, { numeric: true })); }
 function formatSeconds(value) { return `${Number(value || 0).toFixed(1)}초`; }
 function renderMelodyChange() {
@@ -45,7 +62,7 @@ function renderMelodyChange() {
   bindActions();
 }
 
-function renderMelodyTeacher() {
+function renderMelodyTeacherUnlocked() {
   setAccount('멜로디 체인지 · 교사'); const c = state.melodyContent || {};
   app.innerHTML = `<a href="#" class="back" data-action="melody-change">← 멜로디 체인지</a><section class="panel melody-change-page melody-teacher-page"><div class="eyebrow">Teacher studio · Melody change</div><h2>멜로디 체인지 문제 만들기</h2><p>음원을 올리고 학생이 맞힐 노래 제목을 정답으로 입력하세요.</p><div class="field full"><label for="melody-title">노래 제목(정답)</label><input id="melody-title" class="field-input" placeholder="예: 초록 바다" value="${escapeHTML(c.title || '')}" /></div><div class="field full"><label>문제 음원</label><div class="upload"><div class="album">♫</div><div class="upload-copy"><strong id="melody-file-name">${escapeHTML(c.fileName || '음원 파일을 선택하세요')}</strong><span id="melody-file-meta">학생이 제목을 맞힐 때 재생됩니다.</span></div><label class="btn btn-ghost" for="melody-audio-file">파일 선택</label><input id="melody-audio-file" type="file" accept="audio/*" /></div></div><div class="actions"><button class="btn btn-primary" data-action="save-melody">멜로디 체인지 저장</button></div></section>`;
   document.querySelector('#melody-audio-file').addEventListener('change', e => { const file = e.target.files[0]; if (!file) return; state.pendingMelodyFile = file; document.querySelector('#melody-file-name').textContent = file.name; document.querySelector('#melody-file-meta').textContent = `${(file.size / 1024 / 1024).toFixed(1)} MB · ${file.type || 'audio'}`; });
@@ -59,7 +76,9 @@ async function saveMelodyContent() {
   try {
     if (file && window.musicStorage?.isConfigured()) { const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-'); const uploaded = await window.musicStorage.uploadAudio(file, `melody/${Date.now()}-${safeName}`); content.audioPath = uploaded.path; content.audioUrl = uploaded.publicUrl; }
     else if (file) { content.audioUrl = URL.createObjectURL(file); }
-    state.melodyContent = content; state.pendingMelodyFile = null; localStorage.setItem('musicnol-melody', JSON.stringify(content)); alert('멜로디 체인지 음원과 정답을 저장했습니다.'); renderMelodyChange();
+    state.melodyContent = content; state.pendingMelodyFile = null; localStorage.setItem('musicnol-melody', JSON.stringify(content));
+    await window.musicStorage?.upsertClassContent({ ...(state.teacherContent || {}), melodyContent: content });
+    alert('멜로디 체인지 음원과 정답을 저장했습니다.'); renderMelodyChange();
   } catch (error) { alert(error.message || '멜로디 체인지 저장에 실패했습니다.'); }
 }
 
@@ -85,7 +104,7 @@ function submitMelodyAnswer() {
   const records = melodyLeaderboard().filter(record => record.studentNumber !== state.melodyStudentNumber); records.push({ studentNumber: state.melodyStudentNumber, elapsed: Number(elapsed.toFixed(1)), updatedAt: new Date().toISOString() }); localStorage.setItem('musicnol-melody-records', JSON.stringify(records)); state.melodyResult = 'correct'; if (feedback) feedback.innerHTML = `<div class="notice melody-correct">정답이에요! ${formatSeconds(elapsed)} 기록으로 저장됐어요.</div><div class="melody-ranking"><h3>현재 순위</h3>${melodyRankingHTML()}</div>`; document.querySelector('#melody-answer')?.setAttribute('disabled', 'disabled'); document.querySelector('[data-action="submit-melody-answer"]')?.setAttribute('disabled', 'disabled');
 }
 
-function renderTeacher() {
+function renderTeacherUnlocked() {
   setAccount('교사 체험 계정'); const c = state.teacherContent || {};
   app.innerHTML = `<a href="#" class="back" data-action="home">← 홈으로</a><div class="section-head"><div><div class="eyebrow">Teacher studio</div><h2>음악 콘텐츠 만들기</h2><p>MP3와 가사를 등록한 뒤 퀴즈 구간을 설정합니다.</p></div><span class="tag">교사 전용</span></div><div class="dashboard-grid"><section class="panel"><h3>01. 음악과 가사 등록</h3><div class="form-grid"><div class="field"><label for="title">곡 제목</label><input id="title" value="${escapeHTML(c.title || '')}" placeholder="예: 초록 바다" /></div><div class="field"><label for="artist">가수/출처</label><input id="artist" value="${escapeHTML(c.artist || '')}" placeholder="예: 놀라운 음악 교실" /></div><div class="field full"><label>MP3 파일</label><div class="upload"><div class="album">♫</div><div class="upload-copy"><strong id="file-name">${escapeHTML(c.fileName || 'MP3 파일을 선택하세요')}</strong><span id="file-meta">브라우저에서 임시 보관됩니다.</span></div><label class="btn btn-ghost" for="audio-file">파일 선택</label><input id="audio-file" type="file" accept="audio/*" /></div></div><div class="field full"><label for="lyrics">가사 (한 줄에 한 문장)</label><textarea id="lyrics" placeholder="가사를 줄바꿈해서 입력하세요">${escapeHTML((c.lyrics || []).map(x => x.text).join('\n'))}</textarea></div></div></section><aside class="panel"><h3>진행 순서</h3><div class="list-item"><div><strong>1. 전체 음악 감상</strong><p>학생이 먼저 곡 전체를 듣습니다.</p></div><span class="tag">필수</span></div><div class="list-item"><div><strong>2. 퀴즈 가사 구간</strong><p>싱크 화면에서 한 줄을 선택합니다.</p></div><span class="tag">다음</span></div><div class="list-item"><div><strong>3. 힌트 설정</strong><p>오답 후 3종 힌트가 랜덤 노출됩니다.</p></div><span class="tag">자동</span></div></aside></div><div class="actions"><button class="btn btn-secondary" data-action="student">학생 화면 보기</button><button class="btn btn-secondary" data-action="save-content">중간 저장</button><button class="btn btn-primary" data-action="ai-analyze">AI 자동 분석 시작</button><button class="btn btn-primary" data-action="to-sync">가사 싱크 설정 →</button></div>`;
   bindActions(); document.querySelector('#audio-file').addEventListener('change', e => { const file = e.target.files[0]; if (!file) return; state.pendingFile = file; document.querySelector('#file-name').textContent = file.name; document.querySelector('#file-meta').textContent = `${(file.size / 1024 / 1024).toFixed(1)} MB · ${file.type || 'audio'}`; });
@@ -116,6 +135,7 @@ async function resetSyncAndAudio() {
     });
     state.teacherContent = content;
     localStorage.setItem('musicnol-content', JSON.stringify(content));
+    await window.musicStorage?.upsertClassContent({ ...content, melodyContent: state.melodyContent || undefined });
     renderSync();
     alert('싱크와 기존 음원을 초기화했습니다.');
   } catch (error) {
@@ -182,6 +202,7 @@ async function saveContent(successMessage = '') {
   }
   state.teacherContent = content;
   localStorage.setItem('musicnol-content', JSON.stringify(content));
+  await window.musicStorage?.upsertClassContent({ ...content, melodyContent: state.melodyContent || undefined });
   alert(successMessage || (window.musicStorage?.isConfigured() ? '음원을 Supabase Storage에 업로드하고 수업 자료를 저장했습니다.' : '현재는 로컬 임시 저장입니다. Supabase 설정 후 Storage 업로드가 활성화됩니다.'));
 }
 
@@ -278,6 +299,7 @@ async function saveTeacherContent() {
     state.pendingFullFile = null;
     state.pendingQuizFile = null;
     localStorage.setItem('musicnol-content', JSON.stringify(content));
+    await window.musicStorage?.upsertClassContent({ ...content, melodyContent: state.melodyContent || undefined });
     alert(window.musicStorage?.isConfigured() ? '전체 음원과 문제 출제 음원을 Supabase Storage에 저장했습니다.' : '현재는 브라우저 임시 저장입니다.');
   } catch (error) {
     alert(error.message || '음원 저장에 실패했습니다.');
@@ -532,4 +554,31 @@ renderSync = function () {
   }
 };
 
-renderHome();
+function teacherAccessGranted() { return sessionStorage.getItem('musicnol-teacher-authenticated') === 'true'; }
+function requireTeacherAccess(openScreen) {
+  if (teacherAccessGranted()) return openScreen();
+  const password = window.prompt('교사 화면에 들어가려면 비밀번호를 입력하세요.');
+  if (password === '1234') {
+    sessionStorage.setItem('musicnol-teacher-authenticated', 'true');
+    openScreen();
+  } else if (password !== null) {
+    alert('비밀번호가 올바르지 않습니다.');
+  }
+}
+function renderTeacher() { requireTeacherAccess(renderTeacherUnlocked); }
+function renderMelodyTeacher() { requireTeacherAccess(renderMelodyTeacherUnlocked); }
+
+document.addEventListener('click', event => {
+  if (!event.target.closest('[data-action="submit-melody-answer"]')) return;
+  setTimeout(() => {
+    if (state.melodyResult !== 'correct' || !state.melodyStudentNumber) return;
+    const record = getMelodyRecords().find(item => item.studentNumber === state.melodyStudentNumber);
+    if (record) window.musicStorage?.upsertMelodyRecord({ student_number: record.studentNumber, elapsed: Number(record.elapsed), updated_at: record.updatedAt || new Date().toISOString() }).catch(error => console.warn(error));
+  }, 0);
+});
+
+(async function boot() {
+  await syncRemoteContent();
+  await syncRemoteMelodyContent();
+  renderHome();
+})();
