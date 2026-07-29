@@ -288,6 +288,8 @@ function renderSync() {
 }
 async function saveTeacherContent() {
   const content = { ...(state.teacherContent || {}) };
+  const previousFullPath = content.fullAudioPath || '';
+  const previousQuizPath = content.quizAudioPath || '';
   const upload = async (file, kind) => {
     if (!file) return null;
     if (window.musicStorage?.isConfigured()) {
@@ -300,8 +302,18 @@ async function saveTeacherContent() {
   try {
     const full = await upload(state.pendingFullFile, 'full');
     const quiz = await upload(state.pendingQuizFile, 'quiz');
-    if (full) { content.fullAudioPath = full.path; content.fullAudioUrl = full.url; content.fullFileName = full.name; }
-    if (quiz) { content.quizAudioPath = quiz.path; content.quizAudioUrl = quiz.url; content.quizFileName = quiz.name; }
+    if (full) {
+      content.fullAudioPath = full.path;
+      content.fullAudioUrl = full.url;
+      content.fullFileName = full.name;
+      if (previousFullPath && previousFullPath !== full.path) await window.musicStorage.deleteAudio(previousFullPath);
+    }
+    if (quiz) {
+      content.quizAudioPath = quiz.path;
+      content.quizAudioUrl = quiz.url;
+      content.quizFileName = quiz.name;
+      if (previousQuizPath && previousQuizPath !== quiz.path) await window.musicStorage.deleteAudio(previousQuizPath);
+    }
     content.audioUrl = content.quizAudioUrl || content.fullAudioUrl || content.audioUrl || '';
     content.fileName = content.quizFileName || content.fullFileName || content.fileName || '';
     content.savedAt = new Date().toISOString();
