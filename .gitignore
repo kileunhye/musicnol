@@ -8,6 +8,7 @@ build/
 .env
 .env.local
 .env.*.local
+supabase-config.js
 
 # Local PDF analysis artifacts
 tmp/

@@ -27,3 +27,13 @@ npx serve .
 ```
 
 또는 `index.html`을 브라우저에서 직접 열어도 됩니다. 실제 MP3 업로드와 계정/다중 학생 실시간 참여는 다음 단계에서 Supabase Auth, Storage, Realtime을 연결합니다.
+
+## Supabase Storage 연결
+
+1. Supabase Dashboard에서 `music-files` 버킷을 만듭니다. 파일 업로드는 버킷이 먼저 존재해야 합니다.
+2. `supabase-config.example.js`를 `supabase-config.js`로 복사합니다.
+3. `url`과 `anonKey`를 Supabase 프로젝트 설정의 값으로 교체합니다.
+4. `supabase-config.js`는 `.gitignore`에 포함되어 GitHub에 올라가지 않습니다.
+5. 교사 화면에서 MP3를 선택하고 가사 싱크 저장을 누르면 `teacher/날짜-파일명.mp3` 경로로 업로드됩니다.
+
+현재 구현은 간단한 MVP를 위해 Storage 버킷의 공개 재생 URL을 사용합니다. 실제 학생 수업에서 음원을 보호하려면 버킷을 비공개로 만들고, 교사·학생 로그인과 Storage RLS 정책 및 signed URL을 추가해야 합니다.

@@ -54,7 +54,29 @@ function renderSync() {
 
 function highlightLyric(time) { const c = state.teacherContent?.lyrics || []; let index = c.findIndex((line, i) => time >= line.start && time < (c[i + 1]?.start ?? line.end ?? Infinity)); if (index < 0) index = 0; document.querySelectorAll('.lyric-row').forEach((row, i) => row.classList.toggle('active', i === index)); state.quizLineIndex = index; }
 function markCurrentLine() { const audio = document.querySelector('#sync-audio'); const row = document.querySelector(`.lyric-row[data-index="${state.quizLineIndex}"]`); if (!audio || !row) return; row.querySelector('input').value = audio.currentTime.toFixed(1); state.teacherContent.lyrics[state.quizLineIndex].start = audio.currentTime; state.teacherContent.lyrics[state.quizLineIndex].end = state.teacherContent.lyrics[state.quizLineIndex + 1]?.start || audio.currentTime + 4; }
-function saveContent() { localStorage.setItem('musicnol-content', JSON.stringify({ ...state.teacherContent, savedAt: new Date().toISOString() })); alert('음악, 가사 싱크, 퀴즈 구간을 저장했습니다.'); }
+async function saveContent() {
+  const content = { ...state.teacherContent, savedAt: new Date().toISOString() };
+  if (state.pendingFile && window.musicStorage?.isConfigured()) {
+    try {
+      const safeName = state.pendingFile.name.toLowerCase().replace(/[^a-z0-9가-힣._-]/g, '-');
+      const path = `teacher/${Date.now()}-${safeName}`;
+      const uploaded = await window.musicStorage.uploadAudio(state.pendingFile, path);
+      content.audioPath = uploaded.path;
+      content.audioUrl = uploaded.publicUrl;
+      content.fileName = state.pendingFile.name;
+      state.pendingFile = null;
+    } catch (error) {
+      alert(error.message || '음원 업로드에 실패했습니다.');
+      return;
+    }
+  } else if (state.pendingFile) {
+    content.audioUrl = URL.createObjectURL(state.pendingFile);
+    content.fileName = state.pendingFile.name;
+  }
+  state.teacherContent = content;
+  localStorage.setItem('musicnol-content', JSON.stringify(content));
+  alert(window.musicStorage?.isConfigured() ? '음원을 Supabase Storage에 업로드하고 수업 자료를 저장했습니다.' : '현재는 로컬 임시 저장입니다. Supabase 설정 후 Storage 업로드가 활성화됩니다.');
+}
 
 function renderStudentEntry() {
   setAccount('학생 입장');
