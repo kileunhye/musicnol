@@ -25,5 +25,33 @@ window.musicStorage = {
       path,
       publicUrl: `${config.url.replace(/\/$/, '')}/storage/v1/object/public/${encodeURIComponent(config.bucket)}/${path.split('/').map(encodeURIComponent).join('/')}`
     };
+  },
+
+  async upsertStudentScore(record) {
+    if (!this.isConfigured()) return;
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/student_scores?on_conflict=student_number,stage`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        apikey: config.anonKey,
+        Authorization: `Bearer ${config.anonKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify(record)
+    });
+    if (!response.ok) throw new Error(`학생 점수 저장 실패 (${response.status})`);
+  },
+
+  async listStudentScores() {
+    if (!this.isConfigured()) return [];
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/student_scores?select=student_number,stage,score,hints_used,updated_at&order=stage.asc,score.desc`;
+    const response = await fetch(endpoint, {
+      headers: { apikey: config.anonKey, Authorization: `Bearer ${config.anonKey}` }
+    });
+    if (!response.ok) throw new Error(`학생 점수 조회 실패 (${response.status})`);
+    return response.json();
   }
 };
