@@ -38,12 +38,15 @@ h1 em { color: var(--blue); font-style: normal; }
 .btn-primary { color: white; background: var(--blue); box-shadow: 0 8px 20px rgba(65,105,225,.25); }
 .btn-primary:hover { background: var(--blue-dark); }
 .btn-secondary { color: var(--ink); background: #fff; border: 1px solid var(--line); }
+.btn-melody { color: #694c2a; background: #ffe39a; box-shadow: 0 5px 0 #d6ad58; }
 .btn-ghost { color: var(--blue); background: var(--blue-soft); }
 .btn-danger { color: #a64432; background: #fff0ec; }
 .hero-art { min-height: 410px; padding: 34px; border-radius: 34px; background: linear-gradient(140deg, #dfe8ff, #fff7df); position: relative; overflow: hidden; }
 .hero-art:before, .hero-art:after { content: ''; position: absolute; border-radius: 50%; opacity: .5; }
 .hero-art:before { width: 200px; height: 200px; background: #b8cffd; top: -60px; right: -40px; }
 .hero-art:after { width: 160px; height: 160px; background: #ffd884; bottom: -55px; left: -40px; }
+.melody-change-page { max-width: 760px; margin: 40px auto; text-align: center; background: linear-gradient(145deg, #fff7d8, #f4e7ff); }.melody-change-page h2 { color: #694c2a; font-size: clamp(30px, 5vw, 52px); }.melody-change-page p { color: var(--muted); }.melody-change-art { margin: 30px 0; font-size: 58px; letter-spacing: 12px; }
+.melody-choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; max-width: 480px; margin: 28px auto 0; }.melody-teacher-page, .melody-game-page { text-align: left; }.melody-teacher-page h2, .melody-game-page h2 { text-align: center; }.melody-teacher-page > p, .melody-game-page > p { text-align: center; }.melody-timer { margin: 24px auto; color: #6556c9; font-size: 44px; font-weight: 800; text-align: center; }.melody-game-page audio { display: block; width: 100%; margin: 18px 0 24px; }.melody-game-page .field { margin-top: 12px; }.melody-ranking { margin-top: 26px; }.melody-ranking h3 { color: #6556c9; }.melody-correct { margin-top: 18px; background: #e7f8ed; border-color: #a9dbb8; color: #287444; }.melody-wrong { margin-top: 18px; background: #fff0ec; border-color: #f2b2a5; color: #a64432; }
 .music-card { position: absolute; z-index: 1; left: 44px; right: 44px; top: 90px; padding: 24px; border-radius: 24px; background: rgba(255,255,255,.9); box-shadow: var(--shadow); }
 .music-card-top { display: flex; gap: 16px; align-items: center; }
 .album { width: 76px; height: 76px; display: grid; place-items: center; flex: none; border-radius: 20px; background: var(--ink); color: #fff; font-size: 32px; }
