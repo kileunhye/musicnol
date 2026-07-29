@@ -157,9 +157,9 @@ async function enterStudent() {
 }
 
 function renderStudent() {
-  setAccount('학생 체험 계정'); const c = contentForStudent(); const quizIndex = activeQuizIndex(c); const target = c.lyrics[quizIndex] || c.lyrics[0]; const celebration = state.celebration ? '<div class="celebration-banner"><img src="assets/music-classroom-hero.png" alt="음악교실 동물 친구들" /><div><strong>정답이에요! 🎉</strong><span>동물 친구들이 박수를 보내요!</span></div></div>' : '';
+  setAccount('학생 체험 계정'); const c = contentForStudent(); const quizIndex = activeQuizIndex(c); const target = c.lyrics[quizIndex] || c.lyrics[0]; const celebration = '';
   app.innerHTML = `<div class="student-layout"><a href="#" class="back" data-action="student-entry">← 학생 번호 변경</a><div class="student-hero"><div class="eyebrow" style="color:#b9c9ff">Student room · ${escapeHTML(state.studentNumber)}번</div><h2>${escapeHTML(c.title)}</h2><p>${escapeHTML(c.artist)} · 학생 학습 화면</p></div>${celebration}<section class="quiz-card" style="margin-top:18px"><div class="eyebrow">Step 1 · 전체 음악 감상</div><h3>먼저 음악 전체를 들어보세요.</h3><p class="small">음악을 충분히 들은 뒤 아래 버튼을 누르면 교사가 지정한 가사 퀴즈가 열립니다.</p><audio id="student-audio" controls ${c.audioUrl ? `src="${c.audioUrl}"` : ''} style="width:100%;margin-top:10px"></audio><div class="progress" style="margin-top:13px"><span id="student-progress"></span></div><div class="actions"><button class="btn btn-primary" data-action="finish-listening">전체 음악 감상 완료 →</button></div></section><div id="quiz-area" class="${state.listeningComplete ? '' : 'hidden'}"></div><section class="panel" style="margin-top:18px"><div class="section-head"><div><h3>우리 반 순위</h3><p>점수는 학생 번호별로 기록됩니다.</p></div><span class="tag">${getLeaderboard().length}명 기록</span></div>${leaderboardHTML()}</section></div>`;
-  bindActions(); const audio = document.querySelector('#student-audio'); audio.addEventListener('timeupdate', () => { document.querySelector('#student-progress').style.width = audio.duration ? `${audio.currentTime / audio.duration * 100}%` : '0%'; const lines = c.lyrics; const index = lines.findIndex((line, i) => audio.currentTime >= line.start && audio.currentTime < (lines[i + 1]?.start ?? line.end ?? Infinity)); const current = index < 0 ? lines[0] : lines[index]; const next = lines[(index < 0 ? 0 : index) + 1]; document.querySelector('#student-progress').title = current?.noLyrics ? '♪ 간주 중' : (current?.text || ''); }); if (state.listeningComplete) renderQuizArea(c, target); if (state.celebration) setTimeout(() => { state.celebration = false; document.querySelector('.celebration-banner')?.classList.add('is-leaving'); }, 3200);
+  bindActions(); const audio = document.querySelector('#student-audio'); audio.addEventListener('timeupdate', () => { document.querySelector('#student-progress').style.width = audio.duration ? `${audio.currentTime / audio.duration * 100}%` : '0%'; const lines = c.lyrics; const index = lines.findIndex((line, i) => audio.currentTime >= line.start && audio.currentTime < (lines[i + 1]?.start ?? line.end ?? Infinity)); const current = index < 0 ? lines[0] : lines[index]; const next = lines[(index < 0 ? 0 : index) + 1]; document.querySelector('#student-progress').title = current?.noLyrics ? '♪ 간주 중' : (current?.text || ''); }); if (state.listeningComplete) renderQuizArea(c, target);
 }
 
 function renderQuizArea(c, target) {
@@ -259,14 +259,9 @@ function renderQuizAreaWithBlanks(c, target) {
   const area = document.querySelector('#quiz-area'); if (!area) return;
   const visibility = stageVisibility(c); const quizIndex = activeQuizIndex(c);
   const answer = target.blankText || target.text;
-  const hints = state.hintOrder.map(type => `<button class="btn btn-ghost hint-button" data-hint="${type}">${type === 'space' ? '1. 띄어쓰기 보기' : type === 'initial' ? '2. 초성 보기' : '3. 0.75배속으로 듣기'}</button>`).join('');
-  const hintResult = state.usedHints.map(type => `<div class="notice hint-result">${type === 'space' ? `띄어쓰기 힌트: <strong>${escapeHTML(answer)}</strong>` : type === 'initial' ? `초성 힌트: <strong>${escapeHTML(getInitials(answer))}</strong>` : '느린 재생 힌트: 문제 출제용 음원을 0.75배속으로 재생합니다.'}</div>`).join('');
-  const stageButtons = [1, 2, 3].map(stage => `<button class="btn ${state.quizStage === stage ? 'btn-primary' : 'btn-secondary'} student-stage-button" data-stage="${stage}">${stage}단계</button>`).join('');
   const lyricBoard = c.lyrics.map((line, index) => { const isQuestion = index === quizIndex; let text = line.noLyrics ? '♪ 간주 중' : isQuestion ? blankedLyric(line.text, line.blankText) : visibility === 'hide-all' ? '？ ？ ？' : line.text; return `<div class="student-lyric-line ${isQuestion ? 'question-line' : ''}">${escapeHTML(text)}</div>`; }).join('');
-  area.innerHTML = `<section class="lyric-stage"><div><div class="eyebrow" style="color:#b9c9ff">Step 2 · 가사 맞히기</div><div class="current">${state.wrong ? '비워진 가사 부분을 입력해보세요' : '교사가 지정한 빈칸 가사를 맞혀보세요'}</div><div class="next">${state.wrong ? '틀렸어요. 힌트를 하나 골라 다시 도전하세요.' : '1단계 정답은 10점입니다.'}</div></div></section><section class="quiz-card"><div class="stage-tabs"><strong>학습 단계</strong>${stageButtons}</div><div class="student-lyric-board"><div class="small">밑줄이 문제로 비워진 가사 부분입니다.</div>${lyricBoard}</div><h3>비워진 가사 입력</h3><input id="lyric-answer" class="field-input" placeholder="들었던 가사를 입력하세요" value="${escapeHTML(state.selectedAnswer)}" /><div class="actions"><button class="btn btn-primary" data-action="submit-lyric">정답 제출</button></div>${state.wrong ? `<div class="notice" style="margin-top:15px"><strong>랜덤 힌트</strong> · 아래 힌트 중 하나를 선택하세요.</div><div class="hero-actions">${hints}</div>${hintResult}` : ''}</section><div class="score-card"><div><strong>나의 점수</strong><div class="small">힌트를 사용하면 3점씩 차감됩니다.</div></div><span class="score">${state.score} pt</span></div>`;
+  area.innerHTML = `<section class="lyric-stage"><div><div class="eyebrow" style="color:#b9c9ff">Step 2 · 가사 맞히기</div><div class="current">교사가 지정한 빈칸 가사를 맞혀보세요</div><div class="next">한 글자를 맞힐 때마다 3점을 받아요.</div></div></section><section class="quiz-card"><div class="student-lyric-board"><div class="small">밑줄이 문제로 비워진 가사 부분입니다.</div>${lyricBoard}</div><h3>비워진 가사 입력</h3><input id="lyric-answer" class="field-input" placeholder="들었던 가사를 입력하세요" value="${escapeHTML(state.selectedAnswer)}" /><div class="actions"><button class="btn btn-primary" data-action="submit-lyric">정답 제출</button></div></section><div class="score-card"><div><strong>나의 점수</strong><div class="small">맞힌 글자마다 3점이 기록됩니다.</div></div><span class="score">${state.score} pt</span></div>`;
   bindActions(); document.querySelector('#lyric-answer').addEventListener('input', e => state.selectedAnswer = e.target.value);
-  document.querySelectorAll('.hint-button').forEach(b => b.addEventListener('click', () => useHint(b.dataset.hint, c)));
-  document.querySelectorAll('.student-stage-button').forEach(b => b.addEventListener('click', () => { state.quizStage = Number(b.dataset.stage); state.selectedAnswer = ''; state.wrong = false; state.usedHints = []; state.hintOrder = []; renderStudent(); }));
 }
 
 function submitLyricWithBlank() {
@@ -275,7 +270,7 @@ function submitLyricWithBlank() {
   if (!answer) return alert('가사를 입력해주세요.');
   const correctCharacters = [...expected].reduce((score, character, index) => score + (answer[index] === character ? 1 : 0), 0);
   const allCorrect = answer === expected;
-  state.stageScores[1] = correctCharacters;
+  state.stageScores[1] = correctCharacters * 3;
   state.stageHints[1] = 0;
   state.score = Object.values(state.stageScores).reduce((sum, value) => sum + value, 0);
   state.stageCompleted = true;
@@ -320,18 +315,22 @@ renderStudent = function () {
   if (state.stageCompleted) {
     const target = content.lyrics[activeQuizIndex(content)] || content.lyrics[0] || {};
     const expected = (target.blankText || target.text || '').replace(/\s/g, '');
-    const banner = document.querySelector('.celebration-banner');
-    if (banner) {
-      banner.classList.toggle('result-miss', state.quizResult === 'miss');
-      banner.innerHTML = `<img src="assets/music-classroom-hero.png" alt="음악교실 동물 친구들" /><div><strong>${state.quizResult === 'success' ? '정답이에요! 🎉' : '아쉬워요'}</strong><span>${state.quizResult === 'success' ? '동물 친구들이 박수를 보내요!' : '다음에는 더 잘할 수 있어요!'}</span></div>`;
-    }
+    const correctCharacters = Math.floor((state.stageScores[1] || 0) / 3);
+    const rank = getLeaderboard(1).findIndex(record => record.studentNumber === state.studentNumber) + 1;
+    document.querySelector('.stage-result-modal')?.remove();
+    const modal = document.createElement('div');
+    modal.className = `stage-result-modal ${state.quizResult === 'success' ? 'is-success' : 'is-miss'}`;
+    modal.innerHTML = `<div class="stage-result-dialog"><button class="stage-result-close" aria-label="결과창 닫기">×</button>${state.quizResult === 'success' ? '<div class="confetti" aria-hidden="true">🎉 ✨ 🎊 ✨ 🎉</div>' : ''}<img src="assets/music-classroom-hero.png" alt="음악교실 동물 친구들" /><strong>${state.quizResult === 'success' ? '1단계 완료! 정말 잘했어요!' : '1단계 완료! 끝까지 해냈어요!'}</strong><span>${state.quizResult === 'success' ? '동물 친구들이 폭죽을 터뜨리며 축하해요!' : '동물 친구들이 “화이팅!” 하고 응원해요!'}</span><div class="stage-result-score"><b>${state.stageScores[1] || 0}점</b><em>${correctCharacters}글자 정답</em></div><div class="stage-result-rank">우리 반 ${rank}등</div><button class="btn btn-primary stage-result-confirm">확인</button></div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('.stage-result-close').addEventListener('click', () => modal.remove());
+    modal.querySelector('.stage-result-confirm').addEventListener('click', () => modal.remove());
     document.querySelector('#lyric-answer')?.setAttribute('disabled', 'disabled');
     document.querySelector('[data-action="submit-lyric"]')?.setAttribute('disabled', 'disabled');
     const quizCard = document.querySelector('.quiz-card');
     if (quizCard && !quizCard.querySelector('.stage-result')) {
       const result = document.createElement('div');
       result.className = 'notice stage-result';
-      result.innerHTML = `<strong>1단계 결과</strong> · ${state.stageScores[1] || 0} / ${expected.length}점`;
+      result.innerHTML = `<strong>1단계 결과</strong> · ${state.stageScores[1] || 0}점 (${correctCharacters}글자 정답)`;
       quizCard.appendChild(result);
     }
   }
