@@ -68,6 +68,16 @@ h1 em { color: var(--blue); font-style: normal; }
 .notice { padding: 12px 14px; border-radius: 12px; color: #53617b; background: #f3f6fc; font-size: 13px; line-height: 1.6; }.empty { text-align: center; color: var(--muted); padding: 35px 10px; }.actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
 .hidden { display: none; }.field-input { width: 100%; padding: 13px; border: 1px solid var(--line); border-radius: 12px; outline: none; background: #fbfcfe; color: var(--ink); }.field-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }.hint-result { margin-top: 9px; }.hint-button { margin-top: 10px; }
 .record-table { overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fffdf9; }.record-row { display: grid; grid-template-columns: .4fr 1fr .7fr; gap: 12px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 13px; }.record-row:last-child { border-bottom: 0; }.record-head { color: var(--muted); background: #f8f4ea; font-size: 11px; font-weight: 800; text-transform: uppercase; }.record-row.mine { color: var(--blue-dark); background: var(--blue-soft); }.record-row em { display: inline-block; margin-left: 5px; padding: 2px 6px; border-radius: 999px; color: #896b1f; background: #fff1bf; font-size: 10px; font-style: normal; }
+
+/* Full-page cozy music classroom backdrop */
+body { background-color: #f7ead2; background-image: linear-gradient(rgba(255, 249, 239, .72), rgba(255, 249, 239, .86)), url('assets/music-classroom-hero.png'); background-size: cover; background-position: center top; background-attachment: fixed; }
+.app-shell { min-height: 100vh; background: linear-gradient(90deg, rgba(255,249,239,.25), rgba(255,249,239,.04) 58%, rgba(255,249,239,.22)); }
+.topbar { background: rgba(255,253,248,.84); backdrop-filter: blur(14px); }
+.page { position: relative; }
+.hero { padding: 28px 0 48px; }
+.hero-art { background-image: linear-gradient(rgba(255,255,255,.08), rgba(255,255,255,.08)), url('assets/music-classroom-hero.png'); }
+.panel, .quiz-card, .feature, .role-card, .music-card { background-color: rgba(255,253,248,.94); }
+.student-hero { background-color: rgba(86,103,232,.94); }
 @media (max-width: 800px) { .hero, .dashboard-grid, .sync-layout { grid-template-columns: 1fr; }.hero { gap: 20px; }.feature-grid { grid-template-columns: 1fr; }.form-grid { grid-template-columns: 1fr; }.field.full { grid-column: auto; }.role-grid { grid-template-columns: 1fr; }.student-controls { grid-template-columns: 1fr; } }
 @media (max-width: 500px) { .page { width: 92vw; padding-top: 34px; }.topbar { padding: 0 4vw; }.hero-art { min-height: 350px; padding: 18px; }.music-card { left: 20px; right: 20px; top: 72px; }.section-head { display: block; }.section-head .btn { margin-top: 14px; }.panel { padding: 18px; }.quiz-options { grid-template-columns: 1fr; } }
 
