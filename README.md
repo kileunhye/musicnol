@@ -37,3 +37,17 @@ npx serve .
 5. 교사 화면에서 MP3를 선택하고 가사 싱크 저장을 누르면 `teacher/날짜-파일명.mp3` 경로로 업로드됩니다.
 
 현재 구현은 간단한 MVP를 위해 Storage 버킷의 공개 재생 URL을 사용합니다. 실제 학생 수업에서 음원을 보호하려면 버킷을 비공개로 만들고, 교사·학생 로그인과 Storage RLS 정책 및 signed URL을 추가해야 합니다.
+# AI 자동 싱크 서버
+
+교사 화면의 `AI 자동 싱크 맞추기` 버튼은 로컬 Whisper 서버를 사용합니다. 웹앱과 별도로 한 번 실행해두면 MP3와 입력 가사를 분석해 가사 줄별 시작·끝 시간을 반환합니다.
+
+PowerShell에서 프로젝트 폴더를 연 뒤 실행하세요.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements-ai-sync.txt
+uvicorn ai-sync-server:app --host 0.0.0.0 --port 8787
+```
+
+처음 실행할 때 Whisper `small` 모델을 내려받습니다. 이후 교사 화면에서 MP3와 가사를 등록하고 `AI 자동 싱크 맞추기`를 누르면 됩니다. 결과는 자동 적용되지만, 노래 발음·반주·반복 가사에 따라 오차가 생길 수 있으므로 교사가 타임라인을 확인하고 저장하세요.
