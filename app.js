@@ -267,19 +267,26 @@ function stageTwoMaskedLyric(text, blankText, firstAnswer) {
   return `${text.slice(0, index)}${masked}${text.slice(index + blankText.length)}`;
 }
 
+function stageTwoExpected(firstExpected, firstAnswer) {
+  const expected = (firstExpected || '').replace(/\s/g, '');
+  const answer = (firstAnswer || '').replace(/\s/g, '');
+  return [...expected].filter((character, index) => answer[index] !== character).join('');
+}
+
 function renderQuizAreaWithBlanks(c, target) {
   const area = document.querySelector('#quiz-area'); if (!area) return;
   const visibility = stageVisibility(c); const quizIndex = activeQuizIndex(c);
   const answer = target.blankText || target.text;
   const isStageTwo = state.quizStage === 2;
+  const stageTwoAnswer = isStageTwo ? stageTwoExpected(state.stageOneExpected, state.stageOneAnswer) : '';
   const lyricBoard = c.lyrics.map((line, index) => { const isQuestion = index === quizIndex; let text = line.noLyrics ? '♪ 간주 중' : isQuestion ? (isStageTwo ? stageTwoMaskedLyric(line.text, line.blankText, state.stageOneAnswer) : blankedLyric(line.text, line.blankText)) : visibility === 'hide-all' ? '？ ？ ？' : line.text; return `<div class="student-lyric-line ${isQuestion ? 'question-line' : ''}">${escapeHTML(text)}</div>`; }).join('');
-  area.innerHTML = `<section class="lyric-stage"><div><div class="eyebrow" style="color:#b9c9ff">Step ${isStageTwo ? 3 : 2} · 가사 맞히기</div><div class="current">${isStageTwo ? '1단계에서 틀린 글자를 다시 맞혀보세요' : '교사가 지정한 빈칸 가사를 맞혀보세요'}</div><div class="next">${isStageTwo ? '맞힌 글자마다 2점을 추가로 받아요.' : '한 글자를 맞힐 때마다 3점을 받아요.'}</div></div></section><section class="quiz-card"><div class="student-lyric-board"><div class="small">${isStageTwo ? '1단계에서 맞힌 글자는 보이고, 틀린 글자는 *로 표시됩니다.' : '밑줄이 문제로 비워진 가사 부분입니다.'}</div>${lyricBoard}</div><h3>${isStageTwo ? '다시 답하기' : '비워진 가사 입력'}</h3><input id="lyric-answer" class="field-input" placeholder="들었던 가사를 입력하세요" value="${escapeHTML(state.selectedAnswer)}" /><div class="actions"><button class="btn btn-primary" data-action="submit-lyric">정답 제출</button></div></section><div class="score-card"><div><strong>나의 점수</strong><div class="small">${isStageTwo ? '2단계는 맞힌 글자마다 2점이 추가됩니다.' : '1단계는 맞힌 글자마다 3점입니다.'}</div></div><span class="score">${state.score} pt</span></div>`;
+  area.innerHTML = `<section class="lyric-stage"><div><div class="eyebrow" style="color:#b9c9ff">Step ${isStageTwo ? 3 : 2} · 가사 맞히기</div><div class="current">${isStageTwo ? '별표(*)로 표시된 글자만 순서대로 다시 입력해보세요' : '교사가 지정한 빈칸 가사를 맞혀보세요'}</div><div class="next">${isStageTwo ? '맞힌 글자마다 2점을 추가로 받아요.' : '한 글자를 맞힐 때마다 3점을 받아요.'}</div></div></section><section class="quiz-card"><div class="student-lyric-board"><div class="small">${isStageTwo ? '1단계에서 맞힌 글자는 보이고, 틀린 글자는 *로 표시됩니다.' : '밑줄이 문제로 비워진 가사 부분입니다.'}</div>${lyricBoard}</div><h3>${isStageTwo ? '틀린 글자만 다시 입력' : '비워진 가사 입력'}</h3><input id="lyric-answer" class="field-input" placeholder="${isStageTwo ? '별표 글자만 순서대로 입력하세요' : '들었던 가사를 입력하세요'}" value="${escapeHTML(state.selectedAnswer)}" /><div class="actions"><button class="btn btn-primary" data-action="submit-lyric">정답 제출</button></div></section><div class="score-card"><div><strong>나의 점수</strong><div class="small">${isStageTwo ? `2단계는 맞힌 글자마다 2점이 추가됩니다. (${stageTwoAnswer.length}글자)` : '1단계는 맞힌 글자마다 3점입니다.'}</div></div><span class="score">${state.score} pt</span></div>`;
   bindActions(); document.querySelector('#lyric-answer').addEventListener('input', e => state.selectedAnswer = e.target.value);
 }
 
 function submitLyricWithBlank() {
   if (state.stageCompleted) return;
-  const c = contentForStudent(); const target = c.lyrics[activeQuizIndex(c)] || c.lyrics[0]; const expected = (target.blankText || target.text).replace(/\s/g, ''); const answer = state.selectedAnswer.replace(/\s/g, '');
+  const c = contentForStudent(); const target = c.lyrics[activeQuizIndex(c)] || c.lyrics[0]; const fullExpected = (target.blankText || target.text).replace(/\s/g, ''); const expected = state.quizStage === 2 ? stageTwoExpected(state.stageOneExpected || fullExpected, state.stageOneAnswer) : fullExpected; const answer = state.selectedAnswer.replace(/\s/g, '');
   if (!answer) return alert('가사를 입력해주세요.');
   const correctCharacters = [...expected].reduce((score, character, index) => score + (answer[index] === character ? 1 : 0), 0);
   const allCorrect = answer === expected;
