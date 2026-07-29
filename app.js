@@ -13,7 +13,7 @@ const demoContent = {
 
 const state = {
   teacherContent: JSON.parse(localStorage.getItem('musicnol-content') || 'null'),
-  score: 0, stageScores: {}, stageHints: {}, studentNumber: '', selectedAnswer: '', listeningComplete: false, wrong: false, celebration: false, quizResult: '', stageCompleted: false, quizStage: 1, syncHistory: [],
+  score: 0, stageScores: {}, stageHints: {}, studentNumber: '', selectedAnswer: '', stageOneAnswer: '', stageOneExpected: '', listeningComplete: false, wrong: false, celebration: false, quizResult: '', stageCompleted: false, quizStage: 1, syncHistory: [],
   usedHints: [], hintOrder: [], quizLineIndex: 0
 };
 
@@ -24,6 +24,7 @@ function contentForStudent() { return state.teacherContent?.lyrics?.length ? sta
 function getRecords() { return JSON.parse(localStorage.getItem('musicnol-records') || '[]'); }
 function recordStageScore(record, stage) { return Number(record.stageScores?.[stage] ?? (stage === 1 ? record.score : 0)) || 0; }
 function getLeaderboard(stage = state.quizStage) { return getRecords().sort((a, b) => recordStageScore(b, stage) - recordStageScore(a, stage) || a.studentNumber.localeCompare(b.studentNumber, undefined, { numeric: true })); }
+function getOverallLeaderboard() { return getRecords().sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0) || a.studentNumber.localeCompare(b.studentNumber, undefined, { numeric: true })); }
 function aggregateScoreRows(rows) { const records = {}; rows.forEach(row => { const studentNumber = String(row.student_number); records[studentNumber] ??= { studentNumber, score: 0, stageScores: {}, stageHints: {}, updatedAt: row.updated_at }; records[studentNumber].stageScores[row.stage] = Number(row.score) || 0; records[studentNumber].stageHints[row.stage] = Number(row.hints_used) || 0; records[studentNumber].score += Number(row.score) || 0; records[studentNumber].updatedAt = row.updated_at; }); return Object.values(records); }
 async function syncRemoteRecords() { if (!window.musicStorage?.isConfigured()) return; try { const rows = await window.musicStorage.listStudentScores(); const records = aggregateScoreRows(rows); localStorage.setItem('musicnol-records', JSON.stringify(records)); const current = records.find(record => record.studentNumber === state.studentNumber); if (current) { state.score = current.score; state.stageScores = current.stageScores || {}; } } catch (error) { console.warn(error); } }
 async function saveRecord() { const records = getRecords().filter(record => record.studentNumber !== state.studentNumber); const record = { studentNumber: state.studentNumber, score: Object.values(state.stageScores).reduce((sum, score) => sum + score, 0), stageScores: { ...state.stageScores }, stageHints: { ...state.stageHints }, updatedAt: new Date().toISOString() }; records.push(record); state.score = record.score; localStorage.setItem('musicnol-records', JSON.stringify(records)); if (window.musicStorage?.isConfigured()) { try { await Promise.all(Object.entries(state.stageScores).map(([stage, score]) => window.musicStorage.upsertStudentScore({ student_number: state.studentNumber, stage: Number(stage), score: Number(score), hints_used: Number(state.stageHints[stage] || 0), updated_at: record.updatedAt }))); } catch (error) { console.warn(error); } } }
@@ -153,7 +154,7 @@ function leaderboardHTML() {
 async function enterStudent() {
   const input = document.querySelector('#student-number'); const number = input?.value.trim();
   if (!number || !/^\d+$/.test(number)) return alert('학생 번호를 숫자로 입력해주세요.');
-  state.studentNumber = number; state.quizStage = 1; await syncRemoteRecords(); const record = getRecords().find(item => item.studentNumber === number); state.score = record?.score || 0; state.stageScores = record?.stageScores || {}; state.stageHints = record?.stageHints || {}; state.listeningComplete = false; state.wrong = false; state.celebration = false; state.quizResult = ''; state.stageCompleted = false; state.selectedAnswer = ''; state.usedHints = []; state.hintOrder = []; renderStudent();
+  state.studentNumber = number; state.quizStage = 1; await syncRemoteRecords(); const record = getRecords().find(item => item.studentNumber === number); state.score = record?.score || 0; state.stageScores = record?.stageScores || {}; state.stageHints = record?.stageHints || {}; state.listeningComplete = false; state.wrong = false; state.celebration = false; state.quizResult = ''; state.stageCompleted = false; state.selectedAnswer = ''; state.stageOneAnswer = ''; state.stageOneExpected = ''; state.usedHints = []; state.hintOrder = []; renderStudent();
 }
 
 function renderStudent() {
@@ -169,7 +170,7 @@ function renderQuizArea(c, target) {
   const hintResult = state.usedHints.map(type => `<div class="notice hint-result">${type === 'space' ? `띄어쓰기 힌트: <strong>${escapeHTML(target.text)}</strong>` : type === 'initial' ? `초성 힌트: <strong>${escapeHTML(getInitials(target.text))}</strong>` : '느린 재생 힌트: 아래 음악을 0.75배속으로 재생합니다.'}</div>`).join('');
   const stageButtons = [1, 2, 3].map(stage => `<button class="btn ${state.quizStage === stage ? 'btn-primary' : 'btn-secondary'} student-stage-button" data-stage="${stage}">${stage}단계</button>`).join('');
   const lyricBoard = c.lyrics.map((line, index) => { const visible = visibility === 'hide-question' && index !== quizIndex; const text = line.noLyrics ? '♪ 간주 중' : visible ? line.text : '？ ？ ？'; return `<div class="student-lyric-line ${index === quizIndex ? 'question-line' : ''}">${escapeHTML(text)}</div>`; }).join('');
-  area.innerHTML = `<section class="lyric-stage"><div><div class="eyebrow" style="color:#b9c9ff">Step 2 · 가사 맞히기</div><div class="current">${state.wrong ? '이 가사의 부분을 입력해보세요' : '교사가 지정한 가사를 맞혀보세요'}</div><div class="next">${state.wrong ? '틀렸어요. 힌트를 하나 골라 다시 도전하세요.' : '1단계 정답은 10점입니다.'}</div></div></section><section class="quiz-card"><div class="stage-tabs"><strong>학습 단계</strong>${stageButtons}</div><div class="student-lyric-board"><div class="small">${visibility === 'hide-all' ? '이번 단계는 가사를 보지 않고 문제를 풀어요.' : '문제 구간만 가려져 있어요.'}</div>${lyricBoard}</div><h3>가사 입력</h3><input id="lyric-answer" class="field-input" placeholder="들었던 가사를 입력하세요" value="${escapeHTML(state.selectedAnswer)}" /><div class="actions"><button class="btn btn-primary" data-action="submit-lyric">정답 제출</button></div>${state.wrong ? `<div class="notice" style="margin-top:15px"><strong>랜덤 힌트</strong> · 아래 힌트 중 하나를 선택하세요.</div><div class="hero-actions">${hints}</div>${hintResult}` : ''}</section><div class="score-card"><div><strong>나의 점수</strong><div class="small">힌트를 사용하면 학습은 계속할 수 있지만 1단계 10점은 한 번만 지급됩니다.</div></div><span class="score">${state.score} pt</span></div>`;
+  area.innerHTML = `<section class="lyric-stage"><div><div class="eyebrow" style="color:#b9c9ff">Step 2 · 가사 맞히기</div><div class="current">교사가 지정한 가사를 맞혀보세요</div><div class="next">한 글자를 맞힐 때마다 3점을 받아요.</div></div></section><section class="quiz-card"><div class="stage-tabs"><strong>학습 단계</strong>${stageButtons}</div><div class="student-lyric-board"><div class="small">${visibility === 'hide-all' ? '이번 단계는 가사를 보지 않고 문제를 풀어요.' : '문제 구간만 가려져 있어요.'}</div>${lyricBoard}</div><h3>가사 입력</h3><input id="lyric-answer" class="field-input" placeholder="들었던 가사를 입력하세요" value="${escapeHTML(state.selectedAnswer)}" /><div class="actions"><button class="btn btn-primary" data-action="submit-lyric">정답 제출</button></div>${state.wrong ? `<div class="notice" style="margin-top:15px"><strong>랜덤 힌트</strong> · 아래 힌트 중 하나를 선택하세요.</div><div class="hero-actions">${hints}</div>${hintResult}` : ''}</section><div class="score-card"><div><strong>나의 점수</strong><div class="small">맞힌 글자마다 3점이 기록됩니다.</div></div><span class="score">${state.score} pt</span></div>`;
   area.querySelector('.stage-tabs')?.remove();
   bindActions(); document.querySelector('#lyric-answer').addEventListener('input', e => state.selectedAnswer = e.target.value);
   document.querySelectorAll('.hint-button').forEach(b => b.addEventListener('click', () => useHint(b.dataset.hint, c)));
@@ -177,7 +178,7 @@ function renderQuizArea(c, target) {
 }
 function getInitials(text) { return [...text].map(char => { const code = char.charCodeAt(0) - 0xac00; if (code < 0 || code > 11171) return char === ' ' ? ' ' : char; return String.fromCharCode(0x1100 + Math.floor(code / 588)); }).join(''); }
 function finishListening() { state.listeningComplete = true; state.wrong = false; state.selectedAnswer = ''; state.usedHints = []; state.hintOrder = []; renderStudent(); }
-function submitLyric() { const c = contentForStudent(); const target = c.lyrics[activeQuizIndex(c)] || c.lyrics[0]; const answer = state.selectedAnswer.trim().replace(/\s+/g, ' '); if (!answer) return alert('가사를 입력해주세요.'); if (answer === target.text.trim()) { const stageScore = Math.max(0, 10 - state.usedHints.length * 3); if (state.stageScores[state.quizStage] == null) { state.stageScores[state.quizStage] = stageScore; state.stageHints[state.quizStage] = state.usedHints.length; } state.score = Object.values(state.stageScores).reduce((sum, value) => sum + value, 0); saveRecord(); state.wrong = false; state.celebration = true; alert(`정답이에요! ${stageScore}점 획득!`); renderStudent(); } else { state.wrong = true; state.hintOrder = shuffle(['space', 'initial', 'slow'].filter(x => !state.usedHints.includes(x))); renderQuizArea(c, target); alert('아쉬워요. 힌트를 하나 골라 다시 도전해보세요.'); } }
+function submitLyric() { const c = contentForStudent(); const target = c.lyrics[activeQuizIndex(c)] || c.lyrics[0]; const expected = (target.blankText || target.text).replace(/\s/g, ''); const answer = state.selectedAnswer.replace(/\s/g, ''); if (!answer) return alert('가사를 입력해주세요.'); const correctCharacters = [...expected].reduce((score, character, index) => score + (answer[index] === character ? 1 : 0), 0); const stageScore = correctCharacters * 3; state.stageScores[state.quizStage] = stageScore; state.stageHints[state.quizStage] = 0; state.score = Object.values(state.stageScores).reduce((sum, value) => sum + value, 0); saveRecord(); state.wrong = false; state.stageCompleted = true; state.quizResult = answer === expected ? 'success' : 'miss'; state.celebration = true; renderStudent(); }
 function useHint(type, c) { if (state.usedHints.includes(type)) return; state.usedHints.push(type); if (type === 'slow') { const audio = document.querySelector('#student-audio'); if (audio) { audio.playbackRate = 0.75; audio.play().catch(() => {}); } } renderQuizArea(c, c.lyrics[activeQuizIndex(c)] || c.lyrics[0]); }
 
 function bindActions() { document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', e => { e.preventDefault(); const a = button.dataset.action; if (a === 'home') goHome(); if (a === 'teacher') renderTeacher(); if (a === 'student') renderStudentEntry(); if (a === 'student-entry') renderStudentEntry(); if (a === 'enter-student') enterStudent(); if (a === 'to-sync') renderSync(); if (a === 'mark-line') markCurrentLine(); if (a === 'set-first-start') setFirstPhrasePoint('start'); if (a === 'set-first-end') setFirstPhrasePoint('end'); if (a === 'apply-first-seconds') applyFirstPhraseSeconds(); if (a === 'apply-intro-seconds') applyIntroSeconds(); if (a === 'auto-sync') autoSyncLyrics(); if (a === 'ai-sync') analyzeSyncWithAI(); if (a === 'ai-analyze') startAIAnalysis(); if (a === 'add-intro') addIntroSegment(); if (a === 'undo-sync') undoSync(); if (a === 'reset-sync') { pushSyncHistory(); state.teacherContent.lyrics.forEach((line, i) => { line.start = i * 4; line.end = i * 4 + 4; }); renderSync(); } if (a === 'save-content') saveContent(); if (a === 'finish-listening') finishListening(); if (a === 'submit-lyric') submitLyric(); })); if (document.querySelector('.sync-setup') && !document.querySelector('[data-action="add-intro"]')) { document.querySelector('.sync-setup').insertAdjacentHTML('beforeend', '<button class="btn btn-secondary" data-action="add-intro">첫 가사 앞에 전주 추가</button><button class="btn btn-secondary" data-action="undo-sync">되돌리기</button>'); document.querySelector('[data-action="add-intro"]').addEventListener('click', addIntroSegment); document.querySelector('[data-action="undo-sync"]').addEventListener('click', undoSync); } }
@@ -255,12 +256,24 @@ function blankedLyric(text, blankText) {
   return `${text.slice(0, index)}${'＿'.repeat(Math.max(4, blankText.length))}${text.slice(index + blankText.length)}`;
 }
 
+function stageTwoMaskedLyric(text, blankText, firstAnswer) {
+  if (!blankText) return text;
+  const index = text.indexOf(blankText); if (index < 0) return text;
+  const normalizedAnswer = (firstAnswer || '').replace(/\s/g, ''); let answerIndex = 0;
+  const masked = [...blankText].map(character => {
+    if (/\s/.test(character)) return character;
+    const result = normalizedAnswer[answerIndex] === character ? character : '*'; answerIndex += 1; return result;
+  }).join('');
+  return `${text.slice(0, index)}${masked}${text.slice(index + blankText.length)}`;
+}
+
 function renderQuizAreaWithBlanks(c, target) {
   const area = document.querySelector('#quiz-area'); if (!area) return;
   const visibility = stageVisibility(c); const quizIndex = activeQuizIndex(c);
   const answer = target.blankText || target.text;
-  const lyricBoard = c.lyrics.map((line, index) => { const isQuestion = index === quizIndex; let text = line.noLyrics ? '♪ 간주 중' : isQuestion ? blankedLyric(line.text, line.blankText) : visibility === 'hide-all' ? '？ ？ ？' : line.text; return `<div class="student-lyric-line ${isQuestion ? 'question-line' : ''}">${escapeHTML(text)}</div>`; }).join('');
-  area.innerHTML = `<section class="lyric-stage"><div><div class="eyebrow" style="color:#b9c9ff">Step 2 · 가사 맞히기</div><div class="current">교사가 지정한 빈칸 가사를 맞혀보세요</div><div class="next">한 글자를 맞힐 때마다 3점을 받아요.</div></div></section><section class="quiz-card"><div class="student-lyric-board"><div class="small">밑줄이 문제로 비워진 가사 부분입니다.</div>${lyricBoard}</div><h3>비워진 가사 입력</h3><input id="lyric-answer" class="field-input" placeholder="들었던 가사를 입력하세요" value="${escapeHTML(state.selectedAnswer)}" /><div class="actions"><button class="btn btn-primary" data-action="submit-lyric">정답 제출</button></div></section><div class="score-card"><div><strong>나의 점수</strong><div class="small">맞힌 글자마다 3점이 기록됩니다.</div></div><span class="score">${state.score} pt</span></div>`;
+  const isStageTwo = state.quizStage === 2;
+  const lyricBoard = c.lyrics.map((line, index) => { const isQuestion = index === quizIndex; let text = line.noLyrics ? '♪ 간주 중' : isQuestion ? (isStageTwo ? stageTwoMaskedLyric(line.text, line.blankText, state.stageOneAnswer) : blankedLyric(line.text, line.blankText)) : visibility === 'hide-all' ? '？ ？ ？' : line.text; return `<div class="student-lyric-line ${isQuestion ? 'question-line' : ''}">${escapeHTML(text)}</div>`; }).join('');
+  area.innerHTML = `<section class="lyric-stage"><div><div class="eyebrow" style="color:#b9c9ff">Step ${isStageTwo ? 3 : 2} · 가사 맞히기</div><div class="current">${isStageTwo ? '1단계에서 틀린 글자를 다시 맞혀보세요' : '교사가 지정한 빈칸 가사를 맞혀보세요'}</div><div class="next">${isStageTwo ? '맞힌 글자마다 2점을 추가로 받아요.' : '한 글자를 맞힐 때마다 3점을 받아요.'}</div></div></section><section class="quiz-card"><div class="student-lyric-board"><div class="small">${isStageTwo ? '1단계에서 맞힌 글자는 보이고, 틀린 글자는 *로 표시됩니다.' : '밑줄이 문제로 비워진 가사 부분입니다.'}</div>${lyricBoard}</div><h3>${isStageTwo ? '다시 답하기' : '비워진 가사 입력'}</h3><input id="lyric-answer" class="field-input" placeholder="들었던 가사를 입력하세요" value="${escapeHTML(state.selectedAnswer)}" /><div class="actions"><button class="btn btn-primary" data-action="submit-lyric">정답 제출</button></div></section><div class="score-card"><div><strong>나의 점수</strong><div class="small">${isStageTwo ? '2단계는 맞힌 글자마다 2점이 추가됩니다.' : '1단계는 맞힌 글자마다 3점입니다.'}</div></div><span class="score">${state.score} pt</span></div>`;
   bindActions(); document.querySelector('#lyric-answer').addEventListener('input', e => state.selectedAnswer = e.target.value);
 }
 
@@ -270,8 +283,15 @@ function submitLyricWithBlank() {
   if (!answer) return alert('가사를 입력해주세요.');
   const correctCharacters = [...expected].reduce((score, character, index) => score + (answer[index] === character ? 1 : 0), 0);
   const allCorrect = answer === expected;
-  state.stageScores[1] = correctCharacters * 3;
-  state.stageHints[1] = 0;
+  if (state.quizStage === 1) {
+    state.stageOneAnswer = answer;
+    state.stageOneExpected = expected;
+    state.stageScores[1] = correctCharacters * 3;
+    state.stageHints[1] = 0;
+  } else {
+    state.stageScores[2] = correctCharacters * 2;
+    state.stageHints[2] = 0;
+  }
   state.score = Object.values(state.stageScores).reduce((sum, value) => sum + value, 0);
   state.stageCompleted = true;
   state.quizResult = allCorrect ? 'success' : 'miss';
@@ -304,7 +324,6 @@ function renderTeacher02Only() {
 
 const renderStudentScreen = renderStudent;
 renderStudent = function () {
-  state.quizStage = 1;
   renderStudentScreen();
   const content = contentForStudent();
   const audio = document.querySelector('#student-audio');
@@ -315,22 +334,26 @@ renderStudent = function () {
   if (state.stageCompleted) {
     const target = content.lyrics[activeQuizIndex(content)] || content.lyrics[0] || {};
     const expected = (target.blankText || target.text || '').replace(/\s/g, '');
-    const correctCharacters = Math.floor((state.stageScores[1] || 0) / 3);
-    const rank = getLeaderboard(1).findIndex(record => record.studentNumber === state.studentNumber) + 1;
+    const pointsPerCharacter = state.quizStage === 1 ? 3 : 2;
+    const correctCharacters = Math.floor((state.stageScores[state.quizStage] || 0) / pointsPerCharacter);
+    const rank = getOverallLeaderboard().findIndex(record => record.studentNumber === state.studentNumber) + 1;
     document.querySelector('.stage-result-modal')?.remove();
     const modal = document.createElement('div');
     modal.className = `stage-result-modal ${state.quizResult === 'success' ? 'is-success' : 'is-miss'}`;
-    modal.innerHTML = `<div class="stage-result-dialog"><button class="stage-result-close" aria-label="결과창 닫기">×</button>${state.quizResult === 'success' ? '<div class="confetti" aria-hidden="true">🎉 ✨ 🎊 ✨ 🎉</div>' : ''}<img src="assets/music-classroom-hero.png" alt="음악교실 동물 친구들" /><strong>${state.quizResult === 'success' ? '1단계 완료! 정말 잘했어요!' : '1단계 완료! 끝까지 해냈어요!'}</strong><span>${state.quizResult === 'success' ? '동물 친구들이 폭죽을 터뜨리며 축하해요!' : '동물 친구들이 “화이팅!” 하고 응원해요!'}</span><div class="stage-result-score"><b>${state.stageScores[1] || 0}점</b><em>${correctCharacters}글자 정답</em></div><div class="stage-result-rank">우리 반 ${rank}등</div><button class="btn btn-primary stage-result-confirm">확인</button></div>`;
+    const stageLabel = `${state.quizStage}단계`;
+    const nextButton = state.quizStage === 1 ? '<button class="btn btn-secondary stage-two-start">2단계 도전하기</button>' : '';
+    modal.innerHTML = `<div class="stage-result-dialog"><button class="stage-result-close" aria-label="결과창 닫기">×</button>${state.quizResult === 'success' ? '<div class="confetti" aria-hidden="true">🎉 ✨ 🎊 ✨ 🎉</div>' : ''}<img src="assets/music-classroom-hero.png" alt="음악교실 동물 친구들" /><strong>${stageLabel} 완료!</strong><span>${state.quizResult === 'success' ? '동물 친구들이 폭죽을 터뜨리며 축하해요!' : '동물 친구들이 “화이팅!” 하고 응원해요!'}</span><div class="stage-result-score"><b>${state.stageScores[state.quizStage] || 0}점</b><em>${correctCharacters}글자 정답</em></div><div class="stage-result-rank">현재 우리 반 ${rank}등 · 총 ${state.score}점</div><div class="stage-result-actions">${nextButton}<button class="btn btn-primary stage-result-confirm">확인</button></div></div>`;
     document.body.appendChild(modal);
     modal.querySelector('.stage-result-close').addEventListener('click', () => modal.remove());
     modal.querySelector('.stage-result-confirm').addEventListener('click', () => modal.remove());
+    modal.querySelector('.stage-two-start')?.addEventListener('click', () => { modal.remove(); state.quizStage = 2; state.stageCompleted = false; state.quizResult = ''; state.celebration = false; state.selectedAnswer = ''; renderStudent(); });
     document.querySelector('#lyric-answer')?.setAttribute('disabled', 'disabled');
     document.querySelector('[data-action="submit-lyric"]')?.setAttribute('disabled', 'disabled');
     const quizCard = document.querySelector('.quiz-card');
     if (quizCard && !quizCard.querySelector('.stage-result')) {
       const result = document.createElement('div');
       result.className = 'notice stage-result';
-      result.innerHTML = `<strong>1단계 결과</strong> · ${state.stageScores[1] || 0}점 (${correctCharacters}글자 정답)`;
+      result.innerHTML = `<strong>${stageLabel} 결과</strong> · ${state.stageScores[state.quizStage] || 0}점 (${correctCharacters}글자 정답)`;
       quizCard.appendChild(result);
     }
   }
