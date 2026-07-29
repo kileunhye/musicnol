@@ -239,6 +239,22 @@ renderSync = function () {
     autoButton.addEventListener('click', autoSyncLyrics);
     phraseSetup.appendChild(autoButton);
   }
+  document.querySelectorAll('.quiz-line-button:not([disabled])').forEach(button => {
+    const replacement = button.cloneNode(true);
+    button.replaceWith(replacement);
+    replacement.addEventListener('click', () => {
+      const index = Number(replacement.dataset.index);
+      const content = state.teacherContent;
+      const currentStage = state.quizStage;
+      const currentConfig = getStageConfig(content, currentStage);
+      const stages = getQuizStages(content).filter(item => item.stage !== currentStage);
+      stages.push({ stage: currentStage, lyricIndex: index, visibility: currentConfig.visibility });
+      content.quizStages = stages.sort((a, b) => a.stage - b.stage);
+      content.quizLineIndex = content.quizStages.find(item => item.stage === 1)?.lyricIndex ?? index;
+      state.quizLineIndex = index;
+      renderSync();
+    });
+  });
   const audioBox = document.querySelector('.audio-box');
   document.querySelector('[data-action="reset-sync-audio"]')?.remove();
   if (audioBox && !document.querySelector('[data-action="reset-sync-only"]')) {
