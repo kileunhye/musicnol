@@ -35,7 +35,7 @@ function renderHome() {
   app.innerHTML = `<section class="hero"><div><div class="eyebrow">초등 음악 수업을 위한 플레이룸</div><h1>음악을 듣는 순간,<br /><em>교실이 무대</em>가 됩니다.</h1><p class="hero-copy">교사는 음악과 가사를 직접 준비하고, 학생은 노래를 듣고 따라 부르며 즐겁게 배웁니다. 귀여운 퀴즈와 힌트로 음악 시간이 더 기다려져요.</p><div class="hero-actions"><button class="btn btn-primary" data-action="teacher">교사로 시작하기</button><button class="btn btn-secondary" data-action="student-entry">학생으로 참여하기</button><button class="btn btn-melody" data-action="melody-change">🎵 멜로디 체인지</button></div></div><div class="hero-art"><div class="music-card"><div class="music-card-top"><div class="album">♫</div><div><h3>오늘의 음악</h3><p>초록 바다 · 음악 감상 중</p></div></div><div class="wave">${Array.from({length:25}, (_, i) => `<span style="height:${18 + ((i * 17) % 38)}px"></span>`).join('')}</div><div class="notice">전체 음악을 먼저 듣고 가사 퀴즈에 도전해요</div></div></div></section><section class="feature-grid"><article class="feature"><div class="feature-icon">🎛️</div><h3>선생님 음악 스튜디오</h3><p>MP3를 넣고 퀴즈로 사용할 가사 구간을 지정하세요.</p></article><article class="feature"><div class="feature-icon">🎧</div><h3>친구들의 학습 화면</h3><p>전체 음악을 감상한 뒤 지정된 가사를 맞혀보세요.</p></article><article class="feature"><div class="feature-icon">🌟</div><h3>힌트로 다시 도전</h3><p>오답 뒤 랜덤 힌트를 사용하며 음악을 더 자세히 들어요.</p></article></section>`;
   bindActions();
   const teacherButton = document.querySelector('[data-action="teacher"]');
-  if (teacherButton) { teacherButton.title = '교사 비밀번호가 필요합니다'; teacherButton.textContent = '교사로 시작하기 🔒'; }
+  if (teacherButton) { teacherButton.title = '교사 비밀번호가 필요합니다'; teacherButton.textContent = '교사로 시작하기 🔒'; teacherButton.dataset.action = 'teacher-home'; }
 }
 
 function getMelodyRecords() { return JSON.parse(localStorage.getItem('musicnol-melody-records') || '[]'); }
@@ -566,6 +566,10 @@ function requireTeacherAccess(openScreen) {
 }
 function renderTeacher() { requireTeacherAccess(renderTeacherUnlocked); }
 function renderMelodyTeacher() { requireTeacherAccess(renderMelodyTeacherUnlocked); }
+
+document.addEventListener('click', event => {
+  if (event.target.closest('[data-action="teacher-home"]')) requireTeacherAccess(renderTeacherUnlocked);
+});
 
 document.addEventListener('click', event => {
   if (!event.target.closest('[data-action="submit-melody-answer"]')) return;
