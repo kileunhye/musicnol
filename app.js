@@ -208,16 +208,6 @@ const renderTeacherScreen = renderTeacher;
 renderTeacher = function () {
   renderTeacherScreen();
   document.querySelector('[data-action="ai-analyze"]')?.remove();
-  const actions = document.querySelector('.actions');
-  if (actions && !document.querySelector('[data-action="reset-teacher-audio"]')) {
-    const resetButton = document.createElement('button');
-    resetButton.type = 'button';
-    resetButton.className = 'btn btn-danger';
-    resetButton.dataset.action = 'reset-teacher-audio';
-    resetButton.textContent = '음원 초기화 및 삭제';
-    resetButton.addEventListener('click', resetTeacherAudio);
-    actions.insertBefore(resetButton, actions.firstChild);
-  }
   const back = document.querySelector('.back[data-action="home"]');
   if (back) {
     back.textContent = '← 이전으로';
@@ -231,13 +221,22 @@ renderSync = function () {
   const syncHelp = document.querySelector('.sync-help');
   if (syncHelp) syncHelp.textContent = '아래 시간 입력칸에서 앞뒤 시간을 조금씩 조정할 수 있습니다.';
   const audioBox = document.querySelector('.audio-box');
-  if (audioBox && !document.querySelector('[data-action="reset-sync-audio"]')) {
+  document.querySelector('[data-action="reset-sync-audio"]')?.remove();
+  if (audioBox && !document.querySelector('[data-action="reset-sync-only"]')) {
     const resetButton = document.createElement('button');
     resetButton.type = 'button';
-    resetButton.className = 'btn btn-danger';
-    resetButton.dataset.action = 'reset-sync-audio';
-    resetButton.textContent = '싱크 초기화 및 음원 삭제';
-    resetButton.addEventListener('click', resetSyncAndAudio);
+    resetButton.className = 'btn btn-secondary';
+    resetButton.dataset.action = 'reset-sync-only';
+    resetButton.textContent = '싱크 초기화';
+    resetButton.addEventListener('click', () => {
+      if (!confirm('가사 싱크 시간을 초기화할까요? 음원 파일은 삭제되지 않습니다.')) return;
+      pushSyncHistory();
+      state.teacherContent.lyrics.forEach((line, i) => {
+        line.start = i * 4;
+        line.end = i * 4 + 4;
+      });
+      renderSync();
+    });
     audioBox.appendChild(resetButton);
   }
   const back = document.querySelector('.back[data-action="teacher"]');
