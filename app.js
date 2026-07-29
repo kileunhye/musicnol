@@ -190,7 +190,7 @@ function renderSync() {
 function highlightLyric(time) { const c = state.teacherContent?.lyrics || []; let index = c.findIndex((line, i) => time >= line.start && time < (c[i + 1]?.start ?? line.end ?? Infinity)); if (index < 0) index = 0; document.querySelectorAll('.lyric-row').forEach((row, i) => row.classList.toggle('active', i === index)); state.quizLineIndex = index; }
 function markCurrentLine() { const audio = document.querySelector('#sync-audio'); const row = document.querySelector(`.lyric-row[data-index="${state.quizLineIndex}"]`); if (!audio || !row) return; pushSyncHistory(); row.querySelector('input').value = audio.currentTime.toFixed(1); state.teacherContent.lyrics[state.quizLineIndex].start = audio.currentTime; state.teacherContent.lyrics[state.quizLineIndex].end = state.teacherContent.lyrics[state.quizLineIndex + 1]?.start || audio.currentTime + 4; }
 async function saveContent(successMessage = '') {
-  if (document.querySelector('#lyrics')) state.teacherContent = getDraft();
+  if (document.querySelector('#lyrics') && document.querySelector('#title') && document.querySelector('#artist')) state.teacherContent = getDraft();
   const content = { ...state.teacherContent, savedAt: new Date().toISOString() };
   if (state.pendingFile && window.musicStorage?.isConfigured()) {
     try {
