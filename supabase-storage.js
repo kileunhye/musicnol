@@ -14,8 +14,7 @@ window.musicStorage = {
       method: 'POST',
       headers: {
         apikey: config.anonKey,
-        'Content-Type': file.type || 'audio/mpeg',
-        'x-upsert': 'true'
+        'Content-Type': file.type || 'audio/mpeg'
       },
       body: file
     });
