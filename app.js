@@ -13,7 +13,7 @@ const demoContent = {
 
 const state = {
   teacherContent: JSON.parse(localStorage.getItem('musicnol-content') || 'null'),
-  score: 0, stageScores: {}, stageHints: {}, studentNumber: '', selectedAnswer: '', listeningComplete: false, wrong: false, celebration: false, quizStage: 1, syncHistory: [],
+  score: 0, stageScores: {}, stageHints: {}, studentNumber: '', selectedAnswer: '', listeningComplete: false, wrong: false, celebration: false, quizResult: '', stageCompleted: false, quizStage: 1, syncHistory: [],
   usedHints: [], hintOrder: [], quizLineIndex: 0
 };
 
@@ -110,7 +110,7 @@ function renderSync() {
 
 function highlightLyric(time) { const c = state.teacherContent?.lyrics || []; let index = c.findIndex((line, i) => time >= line.start && time < (c[i + 1]?.start ?? line.end ?? Infinity)); if (index < 0) index = 0; document.querySelectorAll('.lyric-row').forEach((row, i) => row.classList.toggle('active', i === index)); state.quizLineIndex = index; }
 function markCurrentLine() { const audio = document.querySelector('#sync-audio'); const row = document.querySelector(`.lyric-row[data-index="${state.quizLineIndex}"]`); if (!audio || !row) return; pushSyncHistory(); row.querySelector('input').value = audio.currentTime.toFixed(1); state.teacherContent.lyrics[state.quizLineIndex].start = audio.currentTime; state.teacherContent.lyrics[state.quizLineIndex].end = state.teacherContent.lyrics[state.quizLineIndex + 1]?.start || audio.currentTime + 4; }
-async function saveContent() {
+async function saveContent(successMessage = '') {
   if (document.querySelector('#lyrics')) state.teacherContent = getDraft();
   const content = { ...state.teacherContent, savedAt: new Date().toISOString() };
   if (state.pendingFile && window.musicStorage?.isConfigured()) {
@@ -132,7 +132,7 @@ async function saveContent() {
   }
   state.teacherContent = content;
   localStorage.setItem('musicnol-content', JSON.stringify(content));
-  alert(window.musicStorage?.isConfigured() ? '음원을 Supabase Storage에 업로드하고 수업 자료를 저장했습니다.' : '현재는 로컬 임시 저장입니다. Supabase 설정 후 Storage 업로드가 활성화됩니다.');
+  alert(successMessage || (window.musicStorage?.isConfigured() ? '음원을 Supabase Storage에 업로드하고 수업 자료를 저장했습니다.' : '현재는 로컬 임시 저장입니다. Supabase 설정 후 Storage 업로드가 활성화됩니다.'));
 }
 
 async function getAudioFileForAnalysis() { if (state.pendingFile) return state.pendingFile; const c = state.teacherContent; if (!c?.audioUrl) return null; const response = await fetch(c.audioUrl); if (!response.ok) throw new Error('저장된 음원을 가져오지 못했습니다.'); const blob = await response.blob(); return new File([blob], c.fileName || 'music.mp3', { type: blob.type || 'audio/mpeg' }); }
@@ -153,7 +153,7 @@ function leaderboardHTML() {
 async function enterStudent() {
   const input = document.querySelector('#student-number'); const number = input?.value.trim();
   if (!number || !/^\d+$/.test(number)) return alert('학생 번호를 숫자로 입력해주세요.');
-  state.studentNumber = number; state.quizStage = 1; await syncRemoteRecords(); const record = getRecords().find(item => item.studentNumber === number); state.score = record?.score || 0; state.stageScores = record?.stageScores || {}; state.stageHints = record?.stageHints || {}; state.listeningComplete = false; state.wrong = false; state.celebration = false; state.selectedAnswer = ''; state.usedHints = []; state.hintOrder = []; renderStudent();
+  state.studentNumber = number; state.quizStage = 1; await syncRemoteRecords(); const record = getRecords().find(item => item.studentNumber === number); state.score = record?.score || 0; state.stageScores = record?.stageScores || {}; state.stageHints = record?.stageHints || {}; state.listeningComplete = false; state.wrong = false; state.celebration = false; state.quizResult = ''; state.stageCompleted = false; state.selectedAnswer = ''; state.usedHints = []; state.hintOrder = []; renderStudent();
 }
 
 function renderStudent() {
@@ -270,9 +270,21 @@ function renderQuizAreaWithBlanks(c, target) {
 }
 
 function submitLyricWithBlank() {
-  const c = contentForStudent(); const target = c.lyrics[activeQuizIndex(c)] || c.lyrics[0]; const expected = (target.blankText || target.text).trim(); const answer = state.selectedAnswer.trim().replace(/\s+/g, ' ');
+  if (state.stageCompleted) return;
+  const c = contentForStudent(); const target = c.lyrics[activeQuizIndex(c)] || c.lyrics[0]; const expected = (target.blankText || target.text).replace(/\s/g, ''); const answer = state.selectedAnswer.replace(/\s/g, '');
   if (!answer) return alert('가사를 입력해주세요.');
-  if (answer === expected) { const stageScore = Math.max(0, 10 - state.usedHints.length * 3); if (state.stageScores[state.quizStage] == null) { state.stageScores[state.quizStage] = stageScore; state.stageHints[state.quizStage] = state.usedHints.length; } state.score = Object.values(state.stageScores).reduce((sum, value) => sum + value, 0); saveRecord(); state.wrong = false; state.celebration = true; alert(`정답이에요! ${stageScore}점 획득!`); renderStudent(); } else { state.wrong = true; state.hintOrder = shuffle(['space', 'initial', 'slow'].filter(x => !state.usedHints.includes(x))); renderQuizArea(c, target); alert('아쉬워요. 힌트를 하나 골라 다시 도전해보세요.'); }
+  const correctCharacters = [...expected].reduce((score, character, index) => score + (answer[index] === character ? 1 : 0), 0);
+  const allCorrect = answer === expected;
+  state.stageScores[1] = correctCharacters;
+  state.stageHints[1] = 0;
+  state.score = Object.values(state.stageScores).reduce((sum, value) => sum + value, 0);
+  state.stageCompleted = true;
+  state.quizResult = allCorrect ? 'success' : 'miss';
+  state.celebration = true;
+  // 1단계는 제출과 동시에 종료합니다. 오답이어도 힌트/재도전으로 넘어가지 않습니다.
+  state.wrong = false;
+  saveRecord();
+  renderStudent();
 }
 
 renderQuizArea = renderQuizAreaWithBlanks;
@@ -305,6 +317,24 @@ renderStudent = function () {
     const source = state.listeningComplete ? (content.quizAudioUrl || content.audioUrl) : (content.fullAudioUrl || content.audioUrl);
     if (source && audio.src !== source) { audio.src = source; audio.load(); }
   }
+  if (state.stageCompleted) {
+    const target = content.lyrics[activeQuizIndex(content)] || content.lyrics[0] || {};
+    const expected = (target.blankText || target.text || '').replace(/\s/g, '');
+    const banner = document.querySelector('.celebration-banner');
+    if (banner) {
+      banner.classList.toggle('result-miss', state.quizResult === 'miss');
+      banner.innerHTML = `<img src="assets/music-classroom-hero.png" alt="음악교실 동물 친구들" /><div><strong>${state.quizResult === 'success' ? '정답이에요! 🎉' : '아쉬워요'}</strong><span>${state.quizResult === 'success' ? '동물 친구들이 박수를 보내요!' : '다음에는 더 잘할 수 있어요!'}</span></div>`;
+    }
+    document.querySelector('#lyric-answer')?.setAttribute('disabled', 'disabled');
+    document.querySelector('[data-action="submit-lyric"]')?.setAttribute('disabled', 'disabled');
+    const quizCard = document.querySelector('.quiz-card');
+    if (quizCard && !quizCard.querySelector('.stage-result')) {
+      const result = document.createElement('div');
+      result.className = 'notice stage-result';
+      result.innerHTML = `<strong>1단계 결과</strong> · ${state.stageScores[1] || 0} / ${expected.length}점`;
+      quizCard.appendChild(result);
+    }
+  }
 };
 
 const renderTeacherScreen = renderTeacher01;
@@ -328,7 +358,7 @@ function renderTeacher02Simple() {
   const updatePreview = () => { const text = document.querySelector('#lyrics').value.trim(); const hidden = document.querySelector('#quiz-blank').value.trim(); document.querySelector('#quiz-preview-text').textContent = blankedLyric(text, hidden) || text || '가사를 입력하면 미리보기가 표시됩니다.'; };
   document.querySelector('#lyrics').addEventListener('input', updatePreview);
   document.querySelector('#quiz-blank').addEventListener('input', updatePreview);
-  document.querySelector('#save-quiz-lyric').addEventListener('click', async () => { const text = document.querySelector('#lyrics').value.trim(); const hidden = document.querySelector('#quiz-blank').value.trim(); if (!text) return alert('문제 출제 가사 한 줄을 입력해주세요.'); if (!hidden || !text.includes(hidden)) return alert('전체 가사 안에 포함된 비울 부분을 입력해주세요.'); c.quizLyric = text; c.quizBlank = hidden; c.lyrics = [{ ...(c.lyrics?.[0] || {}), text, blankText: hidden, start: c.lyrics?.[0]?.start || 0, end: c.lyrics?.[0]?.end || 4 }]; c.quizLineIndex = 0; c.quizStages = [{ stage: 1, lyricIndex: 0 }]; await saveContent(); });
+  document.querySelector('#save-quiz-lyric').addEventListener('click', async () => { const text = document.querySelector('#lyrics').value.trim(); const hidden = document.querySelector('#quiz-blank').value.trim(); if (!text) return alert('문제 출제 가사 한 줄을 입력해주세요.'); if (!hidden || !text.includes(hidden)) return alert('전체 가사 안에 포함된 비울 부분을 입력해주세요.'); c.quizLyric = text; c.quizBlank = hidden; c.lyrics = [{ ...(c.lyrics?.[0] || {}), text, blankText: hidden, start: c.lyrics?.[0]?.start || 0, end: c.lyrics?.[0]?.end || 4 }]; c.quizLineIndex = 0; c.quizStages = [{ stage: 1, lyricIndex: 0 }]; await saveContent('문제 가사가 저장되었습니다.'); });
   bindActions();
 }
 
