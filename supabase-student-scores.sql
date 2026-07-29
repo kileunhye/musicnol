@@ -31,3 +31,9 @@ on public.student_scores for update
 to anon, authenticated
 using (true)
 with check (true);
+
+drop policy if exists "Teachers can delete scores" on public.student_scores;
+create policy "Teachers can delete scores"
+on public.student_scores for delete
+to anon, authenticated
+using (true);

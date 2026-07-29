@@ -75,6 +75,14 @@ window.musicStorage = {
     return response.json();
   },
 
+  async clearStudentScores() {
+    if (!this.isConfigured()) return;
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/student_scores?student_number=not.is.null`;
+    const response = await fetch(endpoint, { method: 'DELETE', headers: { apikey: config.anonKey } });
+    if (!response.ok) throw new Error(`학생 점수 초기화 실패 (${response.status})`);
+  },
+
   async getClassContent() {
     if (!this.isConfigured()) return null;
     const config = window.SUPABASE_CONFIG;
@@ -134,6 +142,14 @@ window.musicStorage = {
     const response = await fetch(endpoint, { headers: { apikey: config.anonKey } });
     if (!response.ok) throw new Error(`멜로디 기록 조회 실패 (${response.status})`);
     return response.json();
+  },
+
+  async clearMelodyRecords() {
+    if (!this.isConfigured()) return;
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/melody_records?student_number=not.is.null`;
+    const response = await fetch(endpoint, { method: 'DELETE', headers: { apikey: config.anonKey } });
+    if (!response.ok) throw new Error(`멜로디 기록 초기화 실패 (${response.status})`);
   },
 
   async upsertMelodyRecord(record) {

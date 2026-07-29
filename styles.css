@@ -39,6 +39,8 @@ h1 em { color: var(--blue); font-style: normal; }
 .btn-primary:hover { background: var(--blue-dark); }
 .btn-success { color: white; background: #2f9e67; box-shadow: 0 8px 20px rgba(47,158,103,.25); }
 .btn-success:hover { background: #267f53; }
+.btn-danger { color: white; background: #d9534f; box-shadow: 0 5px 0 #a83d3a; }
+.btn-danger:hover { background: #b94340; }
 .btn-secondary { color: var(--ink); background: #fff; border: 1px solid var(--line); }
 .btn-melody { color: #694c2a; background: #ffe39a; box-shadow: 0 5px 0 #d6ad58; }
 .btn-ghost { color: var(--blue); background: var(--blue-soft); }

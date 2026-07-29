@@ -337,11 +337,35 @@ async function saveTeacherContent() {
   }
 }
 
+async function resetStudentData() {
+  if (!confirm('학생들의 점수와 순위, 멜로디 체인지 기록을 모두 삭제하고 초기화할까요?')) return;
+  try {
+    await Promise.all([
+      window.musicStorage?.clearStudentScores(),
+      window.musicStorage?.clearMelodyRecords()
+    ]);
+    localStorage.removeItem('musicnol-records');
+    localStorage.removeItem('musicnol-melody-records');
+    state.score = 0;
+    state.stageScores = {};
+    state.stageHints = {};
+    alert('학생 점수와 순위가 초기화되었습니다.');
+  } catch (error) {
+    alert(error.message || '학생 데이터 초기화에 실패했습니다.');
+  }
+}
+
 function renderTeacher01() {
   setAccount('교사 체험 계정');
   const c = state.teacherContent || {};
   app.innerHTML = `<a href="#" class="back" data-action="home">← 홈으로</a><div class="section-head"><div><div class="eyebrow">Teacher studio / 01</div><h2>음악 콘텐츠 만들기</h2><p>전체 감상용 음원과 문제 출제용 음원을 따로 등록합니다.</p></div><span class="tag">교사 전용</span></div><div class="dashboard-grid"><section class="panel"><h3>01. 음원 파일 등록</h3><div class="form-grid"><div class="field full"><label>전체 감상용 음원</label><div class="upload"><div class="album">♫</div><div class="upload-copy"><strong id="full-file-name">${escapeHTML(c.fullFileName || c.fileName || '전체 음원 파일을 선택하세요')}</strong><span>학생이 처음 전체 음악을 감상할 때 사용합니다.</span></div><label class="btn btn-ghost" for="full-audio-file">파일 선택</label><input id="full-audio-file" type="file" accept="audio/*" /></div></div><div class="field full"><label>문제 출제용 음원</label><div class="upload"><div class="album">?</div><div class="upload-copy"><strong id="quiz-file-name">${escapeHTML(c.quizFileName || '문제 출제용 음원 파일을 선택하세요')}</strong><span>가사 문제를 풀 때 재생할 음원입니다.</span></div><label class="btn btn-ghost" for="quiz-audio-file">파일 선택</label><input id="quiz-audio-file" type="file" accept="audio/*" /></div></div><div class="field"><label for="title">곡 제목</label><input id="title" value="${escapeHTML(c.title || '')}" placeholder="예: 동해물과 백두산이" /></div><div class="field"><label for="artist">가수/출처</label><input id="artist" value="${escapeHTML(c.artist || '')}" placeholder="예: 놀라운 음악 교실" /></div></div></section><aside class="panel"><h3>수업 흐름</h3><div class="list-item"><div><strong>1. 전체 음악 듣기</strong><p>전체 감상용 음원을 끝까지 듣습니다.</p></div><span class="tag">01</span></div><div class="list-item"><div><strong>2. 가사 문제 풀기</strong><p>문제 출제용 음원과 빈칸 가사를 사용합니다.</p></div><span class="tag">02</span></div></aside></div><div class="actions"><button class="btn btn-secondary" id="save-teacher-content">음원 저장하기</button><button class="btn btn-primary" data-action="to-sync">문제 출제 화면으로 →</button></div>`;
   bindActions();
+  const resetButton = document.createElement('button');
+  resetButton.className = 'btn btn-danger';
+  resetButton.type = 'button';
+  resetButton.textContent = '학생 점수·순위 초기화';
+  resetButton.addEventListener('click', resetStudentData);
+  document.querySelector('.actions')?.appendChild(resetButton);
   const nextButton = document.querySelector('[data-action="to-sync"]');
   const cleanNextButton = nextButton.cloneNode(true);
   nextButton.replaceWith(cleanNextButton);

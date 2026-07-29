@@ -58,3 +58,7 @@ on public.melody_records for insert to anon, authenticated with check (true);
 drop policy if exists "Anyone can update melody records" on public.melody_records;
 create policy "Anyone can update melody records"
 on public.melody_records for update to anon, authenticated using (true) with check (true);
+
+drop policy if exists "Anyone can delete melody records" on public.melody_records;
+create policy "Anyone can delete melody records"
+on public.melody_records for delete to anon, authenticated using (true);
