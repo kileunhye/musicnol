@@ -98,7 +98,7 @@ body { background-color: #f7ead2; background-image: linear-gradient(rgba(255, 24
   --shadow: 0 18px 50px rgba(72, 57, 29, .10);
 }
 
-body { background-color: var(--bg); background-image: radial-gradient(#f3dec1 1.2px, transparent 1.2px); background-size: 24px 24px; }
+body { background-color: #f7ead2; background-image: linear-gradient(rgba(255, 249, 239, .72), rgba(255, 249, 239, .86)), url('assets/music-classroom-hero.png'); background-size: cover; background-position: center top; background-attachment: fixed; }
 .topbar { height: 82px; background: rgba(255,253,248,.92); border-bottom: 2px solid #f2e6d2; }
 .brand { font-size: 20px; }.brand-mark { width: 42px; height: 42px; border-radius: 15px 15px 15px 5px; background: var(--coral); box-shadow: 4px 4px 0 #ffd35c; transform: rotate(-4deg); }
 .topbar-meta { padding: 8px 12px; background: #fff4cf; border-radius: 999px; color: #8b6e27; font-weight: 700; }
