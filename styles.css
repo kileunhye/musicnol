@@ -69,3 +69,34 @@ h1 em { color: var(--blue); font-style: normal; }
 .hidden { display: none; }.field-input { width: 100%; padding: 13px; border: 1px solid var(--line); border-radius: 12px; outline: none; background: #fbfcfe; color: var(--ink); }.field-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }.hint-result { margin-top: 9px; }.hint-button { margin-top: 10px; }
 @media (max-width: 800px) { .hero, .dashboard-grid, .sync-layout { grid-template-columns: 1fr; }.hero { gap: 20px; }.feature-grid { grid-template-columns: 1fr; }.form-grid { grid-template-columns: 1fr; }.field.full { grid-column: auto; }.role-grid { grid-template-columns: 1fr; }.student-controls { grid-template-columns: 1fr; } }
 @media (max-width: 500px) { .page { width: 92vw; padding-top: 34px; }.topbar { padding: 0 4vw; }.hero-art { min-height: 350px; padding: 18px; }.music-card { left: 20px; right: 20px; top: 72px; }.section-head { display: block; }.section-head .btn { margin-top: 14px; }.panel { padding: 18px; }.quiz-options { grid-template-columns: 1fr; } }
+
+/* Playful elementary music classroom theme */
+:root {
+  --ink: #26324a;
+  --muted: #74809a;
+  --line: #eee4d5;
+  --paper: #fffdf8;
+  --bg: #fff9ef;
+  --blue: #5667e8;
+  --blue-dark: #3f4fca;
+  --blue-soft: #eef0ff;
+  --yellow: #ffd35c;
+  --mint: #dff7e9;
+  --coral: #ff8c78;
+  --purple: #9b7af6;
+  --shadow: 0 18px 50px rgba(72, 57, 29, .10);
+}
+
+body { background-color: var(--bg); background-image: radial-gradient(#f3dec1 1.2px, transparent 1.2px); background-size: 24px 24px; }
+.topbar { height: 82px; background: rgba(255,253,248,.92); border-bottom: 2px solid #f2e6d2; }
+.brand { font-size: 20px; }.brand-mark { width: 42px; height: 42px; border-radius: 15px 15px 15px 5px; background: var(--coral); box-shadow: 4px 4px 0 #ffd35c; transform: rotate(-4deg); }
+.topbar-meta { padding: 8px 12px; background: #fff4cf; border-radius: 999px; color: #8b6e27; font-weight: 700; }
+.hero { min-height: 540px; gap: 70px; }.eyebrow { color: #ef765e; letter-spacing: .12em; }.hero-copy { color: #68738a; }.hero h1 { color: #27324b; text-shadow: 3px 3px 0 #ffe6a5; }.hero h1 em { color: var(--blue); }
+.hero-art { border: 3px solid #fff; background: linear-gradient(145deg, #dff4ff 0%, #fff1c9 100%); box-shadow: 8px 10px 0 #e7d9c4; transform: rotate(1.5deg); }.hero-art:before { background: #c5e9ff; }.hero-art:after { background: #ffd783; }
+.hero-art:before { content: '♪'; width: auto; height: auto; padding: 0; background: transparent; color: #fff; font-size: 120px; border-radius: 0; top: -20px; right: 24px; opacity: .8; transform: rotate(15deg); }.hero-art:after { content: '♫'; width: auto; height: auto; padding: 0; background: transparent; color: #ffaf99; font-size: 110px; border-radius: 0; bottom: -25px; left: 18px; opacity: .7; transform: rotate(-15deg); }
+.music-card { border: 3px solid #fff; box-shadow: 0 12px 0 rgba(83,105,232,.16), var(--shadow); }.album { background: #5667e8; box-shadow: inset -7px -7px 0 #3f4fca; }.music-card h3 { color: #2b3750; }.wave span { border-radius: 8px 8px 3px 3px; }
+.btn { border-radius: 16px; padding: 14px 20px; }.btn-primary { background: var(--blue); box-shadow: 0 5px 0 var(--blue-dark); }.btn-primary:hover { box-shadow: 0 2px 0 var(--blue-dark); transform: translateY(2px); }.btn-secondary { background: #fff; box-shadow: 0 4px 0 #e8dfd1; }.btn-ghost { background: #fff1bf; color: #896b1f; }
+.feature-grid { gap: 22px; margin-top: 42px; }.feature { border: 2px solid #fff; box-shadow: 0 6px 0 #eadfcd; }.feature:nth-child(1) { background: #eaf4ff; }.feature:nth-child(2) { background: #fff1ed; }.feature:nth-child(3) { background: #fff8d9; }.feature-icon { font-size: 30px; }.feature h3 { font-size: 17px; }
+.role-card { border: 2px solid #fff; box-shadow: 0 7px 0 #eadfcd; }.role-card:nth-child(1) { background: #eaf4ff; }.role-card:nth-child(2) { background: #fff1ed; }.role-icon { background: #fff; box-shadow: 3px 3px 0 #d8e4ff; }
+.section-head h2 { font-size: 34px; }.panel { border: 2px solid #fff; background: rgba(255,253,248,.96); box-shadow: 0 7px 0 #eadfcd; }.panel h3 { color: #35415d; }.audio-box, .student-hero { border: 2px solid #fff; }.upload { border: 2px dashed #c9bca8; background: #fffaf1; }.field input, .field textarea, .field-input { background: #fffdf9; border: 2px solid #eee4d5; }
+.student-hero { position: relative; overflow: hidden; background: linear-gradient(135deg, #596bea, #8e77e9); box-shadow: 0 8px 0 #d3c6e9; }.student-hero:after { content: '♫'; position: absolute; right: 26px; top: -20px; color: rgba(255,255,255,.2); font-size: 125px; transform: rotate(15deg); }.lyric-stage { border: 5px solid #fff; box-shadow: 0 8px 0 #d8d0c5; background: #26324a; }.lyric-stage .current { text-shadow: 3px 3px 0 #5667e8; }.quiz-card { border: 2px solid #fff; box-shadow: 0 6px 0 #eadfcd; }.score-card { border: 2px solid #fff; box-shadow: 0 5px 0 #eadfcd; }.tag { background: #dff7e9; }
