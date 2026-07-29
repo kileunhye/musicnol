@@ -20,7 +20,10 @@ window.musicStorage = {
       },
       body: file
     });
-    if (!response.ok) throw new Error(`Storage 업로드 실패 (${response.status})`);
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`Storage 업로드 실패 (${response.status})${detail ? `\n${detail}` : ''}`);
+    }
     return {
       path,
       publicUrl: `${config.url.replace(/\/$/, '')}/storage/v1/object/public/${encodeURIComponent(config.bucket)}/${path.split('/').map(encodeURIComponent).join('/')}`
@@ -39,7 +42,10 @@ window.musicStorage = {
         Authorization: `Bearer ${config.anonKey}`
       }
     });
-    if (!response.ok) throw new Error(`Storage 음원 삭제 실패 (${response.status}). Supabase Storage DELETE 정책을 확인해주세요.`);
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`Storage 음원 삭제 실패 (${response.status}). Supabase Storage DELETE 정책을 확인해주세요.${detail ? `\n${detail}` : ''}`);
+    }
   },
 
   async upsertStudentScore(record) {
