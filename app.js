@@ -430,7 +430,9 @@ function renderTeacher02Simple() {
   setAccount('교사 체험 계정');
   const c = state.teacherContent || (state.teacherContent = {});
   const existing = c.lyrics?.[0] || {};
-  const lyric = c.quizLyric || existing.text || '';
+  const defaultQuizLyric = '랄랄라 힘차게 달려요 다함께 남북 끝까지 저 산과 들에 인사를 건네며 친구들을 만날거야';
+  const savedLyric = c.quizLyric || existing.text || '';
+  const lyric = savedLyric === '네가 없는 거리에는' ? defaultQuizLyric : (savedLyric || defaultQuizLyric);
   const blank = c.quizBlank || existing.blankText || '';
   app.innerHTML = `<a href="#" class="back" data-action="teacher">← 음악 등록으로</a><div class="section-head"><div><div class="eyebrow">Teacher studio / 02</div><h2>문제 출제 가사 만들기</h2><p>문제 음원에 해당하는 가사 한 줄과 비워낼 부분을 입력합니다.</p></div><span class="tag">문제 출제 전용</span></div><section class="panel problem-lyrics-panel single-quiz-lyrics"><div class="problem-audio-note"><strong>문제 출제용 음원</strong><span>${escapeHTML(c.quizFileName || 'Teacher studio 01에서 문제용 음원을 먼저 등록하세요.')}</span></div><div class="field full"><label for="lyrics">문제 출제 가사 한 줄</label><textarea id="lyrics" rows="3" placeholder="예: 동해물과 백두산이 마르고 닳도록">${escapeHTML(lyric)}</textarea></div><div class="field full"><label for="quiz-blank">문제로 비울 부분</label><input id="quiz-blank" type="text" placeholder="예: 마르고 닳도록" value="${escapeHTML(blank)}" /><p class="small">입력한 부분이 학생 화면에서 빈칸으로 표시됩니다.</p></div><div class="quiz-preview"><strong>학생 화면 미리보기</strong><span id="quiz-preview-text">${escapeHTML(blankedLyric(lyric, blank) || lyric || '가사를 입력하면 미리보기가 표시됩니다.')}</span></div><div class="actions"><button class="btn btn-primary" id="save-quiz-lyric">문제 가사 저장하기</button></div></section>`;
   const updatePreview = () => { const text = document.querySelector('#lyrics').value.trim(); const hidden = document.querySelector('#quiz-blank').value.trim(); document.querySelector('#quiz-preview-text').textContent = blankedLyric(text, hidden) || text || '가사를 입력하면 미리보기가 표시됩니다.'; };
