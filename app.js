@@ -13,7 +13,7 @@ const demoContent = {
 
 const state = {
   teacherContent: JSON.parse(localStorage.getItem('musicnol-content') || 'null'),
-  score: 0, selectedAnswer: '', listeningComplete: false, wrong: false,
+  score: 0, studentNumber: '', selectedAnswer: '', listeningComplete: false, wrong: false,
   usedHints: [], hintOrder: [], quizLineIndex: 0
 };
 
@@ -21,11 +21,14 @@ function escapeHTML(value = '') { return String(value).replace(/[&<>'"]/g, c => 
 function formatTime(value) { const n = Number(value) || 0; return `${Math.floor(n / 60).toString().padStart(2, '0')}:${(n % 60).toFixed(1).padStart(4, '0')}`; }
 function setAccount(value) { accountLabel.textContent = value; }
 function contentForStudent() { return state.teacherContent?.lyrics?.length ? state.teacherContent : demoContent; }
+function getRecords() { return JSON.parse(localStorage.getItem('musicnol-records') || '[]'); }
+function saveRecord() { const records = getRecords().filter(record => record.studentNumber !== state.studentNumber); records.push({ studentNumber: state.studentNumber, score: state.score, updatedAt: new Date().toISOString() }); localStorage.setItem('musicnol-records', JSON.stringify(records)); }
+function getLeaderboard() { return getRecords().sort((a, b) => b.score - a.score || a.studentNumber.localeCompare(b.studentNumber, undefined, { numeric: true })); }
 function shuffle(items) { return [...items].sort(() => Math.random() - .5); }
 function goHome() { setAccount('체험 모드'); renderHome(); }
 
 function renderHome() {
-  app.innerHTML = `<section class="hero"><div><div class="eyebrow">초등 음악 수업을 위한 플레이룸</div><h1>음악을 듣는 순간,<br /><em>교실이 무대</em>가 됩니다.</h1><p class="hero-copy">교사는 음악과 가사를 직접 준비하고, 학생은 노래를 듣고 따라 부르며 즐겁게 배웁니다. 귀여운 퀴즈와 힌트로 음악 시간이 더 기다려져요.</p><div class="hero-actions"><button class="btn btn-primary" data-action="teacher">교사로 시작하기</button><button class="btn btn-secondary" data-action="student">학생으로 참여하기</button></div></div><div class="hero-art"><div class="music-card"><div class="music-card-top"><div class="album">♫</div><div><h3>오늘의 음악</h3><p>초록 바다 · 음악 감상 중</p></div></div><div class="wave">${Array.from({length:25}, (_, i) => `<span style="height:${18 + ((i * 17) % 38)}px"></span>`).join('')}</div><div class="notice">전체 음악을 먼저 듣고 가사 퀴즈에 도전해요</div></div></div></section><section class="feature-grid"><article class="feature"><div class="feature-icon">🎛️</div><h3>선생님 음악 스튜디오</h3><p>MP3를 넣고 퀴즈로 사용할 가사 구간을 지정하세요.</p></article><article class="feature"><div class="feature-icon">🎧</div><h3>친구들의 학습 화면</h3><p>전체 음악을 감상한 뒤 지정된 가사를 맞혀보세요.</p></article><article class="feature"><div class="feature-icon">🌟</div><h3>힌트로 다시 도전</h3><p>오답 뒤 랜덤 힌트를 사용하며 음악을 더 자세히 들어요.</p></article></section>`;
+  app.innerHTML = `<section class="hero"><div><div class="eyebrow">초등 음악 수업을 위한 플레이룸</div><h1>음악을 듣는 순간,<br /><em>교실이 무대</em>가 됩니다.</h1><p class="hero-copy">교사는 음악과 가사를 직접 준비하고, 학생은 노래를 듣고 따라 부르며 즐겁게 배웁니다. 귀여운 퀴즈와 힌트로 음악 시간이 더 기다려져요.</p><div class="hero-actions"><button class="btn btn-primary" data-action="teacher">교사로 시작하기</button><button class="btn btn-secondary" data-action="student-entry">학생으로 참여하기</button></div></div><div class="hero-art"><div class="music-card"><div class="music-card-top"><div class="album">♫</div><div><h3>오늘의 음악</h3><p>초록 바다 · 음악 감상 중</p></div></div><div class="wave">${Array.from({length:25}, (_, i) => `<span style="height:${18 + ((i * 17) % 38)}px"></span>`).join('')}</div><div class="notice">전체 음악을 먼저 듣고 가사 퀴즈에 도전해요</div></div></div></section><section class="feature-grid"><article class="feature"><div class="feature-icon">🎛️</div><h3>선생님 음악 스튜디오</h3><p>MP3를 넣고 퀴즈로 사용할 가사 구간을 지정하세요.</p></article><article class="feature"><div class="feature-icon">🎧</div><h3>친구들의 학습 화면</h3><p>전체 음악을 감상한 뒤 지정된 가사를 맞혀보세요.</p></article><article class="feature"><div class="feature-icon">🌟</div><h3>힌트로 다시 도전</h3><p>오답 뒤 랜덤 힌트를 사용하며 음악을 더 자세히 들어요.</p></article></section>`;
   bindActions();
 }
 
@@ -53,9 +56,26 @@ function highlightLyric(time) { const c = state.teacherContent?.lyrics || []; le
 function markCurrentLine() { const audio = document.querySelector('#sync-audio'); const row = document.querySelector(`.lyric-row[data-index="${state.quizLineIndex}"]`); if (!audio || !row) return; row.querySelector('input').value = audio.currentTime.toFixed(1); state.teacherContent.lyrics[state.quizLineIndex].start = audio.currentTime; state.teacherContent.lyrics[state.quizLineIndex].end = state.teacherContent.lyrics[state.quizLineIndex + 1]?.start || audio.currentTime + 4; }
 function saveContent() { localStorage.setItem('musicnol-content', JSON.stringify({ ...state.teacherContent, savedAt: new Date().toISOString() })); alert('음악, 가사 싱크, 퀴즈 구간을 저장했습니다.'); }
 
+function renderStudentEntry() {
+  setAccount('학생 입장');
+  app.innerHTML = `<div class="student-layout"><a href="#" class="back" data-action="home">← 홈으로</a><section class="student-hero"><div class="eyebrow" style="color:#b9c9ff">Student entrance</div><h2>내 번호로 입장하기</h2><p>선생님에게 받은 자기 번호를 입력하면 학습 기록과 순위가 저장됩니다.</p></section><section class="quiz-card" style="margin-top:22px"><div class="field"><label for="student-number">학생 번호</label><input id="student-number" class="field-input" inputmode="numeric" maxlength="4" placeholder="예: 12" /></div><div class="notice" style="margin-top:14px">번호는 이름 대신 기록을 구분하기 위한 값입니다. 같은 번호로 다시 입장하면 기존 점수가 업데이트됩니다.</div><div class="actions"><button class="btn btn-primary" data-action="enter-student">학습 시작하기 →</button></div></section><section class="panel" style="margin-top:18px"><h3>현재 순위</h3>${leaderboardHTML()}</section></div>`;
+  bindActions(); document.querySelector('#student-number').focus();
+}
+
+function leaderboardHTML() {
+  const records = getLeaderboard(); if (!records.length) return '<div class="empty">아직 기록이 없어요. 첫 번째 주인공이 되어보세요!</div>';
+  return `<div class="record-table"><div class="record-row record-head"><span>순위</span><span>학생 번호</span><span>점수</span></div>${records.map((record, index) => `<div class="record-row ${record.studentNumber === state.studentNumber ? 'mine' : ''}"><strong>${index + 1}</strong><span>${escapeHTML(record.studentNumber)}번 ${record.studentNumber === state.studentNumber ? '<em>나</em>' : ''}</span><strong>${record.score} pt</strong></div>`).join('')}</div>`;
+}
+
+function enterStudent() {
+  const input = document.querySelector('#student-number'); const number = input?.value.trim();
+  if (!number || !/^\d+$/.test(number)) return alert('학생 번호를 숫자로 입력해주세요.');
+  state.studentNumber = number; state.score = getRecords().find(record => record.studentNumber === number)?.score || 0; state.listeningComplete = false; state.wrong = false; state.selectedAnswer = ''; state.usedHints = []; state.hintOrder = []; renderStudent();
+}
+
 function renderStudent() {
   setAccount('학생 체험 계정'); const c = contentForStudent(); const quizIndex = c.quizLineIndex ?? demoContent.quizLineIndex; const target = c.lyrics[quizIndex] || c.lyrics[0];
-  app.innerHTML = `<div class="student-layout"><a href="#" class="back" data-action="home">← 홈으로</a><div class="student-hero"><div class="eyebrow" style="color:#b9c9ff">Student room</div><h2>${escapeHTML(c.title)}</h2><p>${escapeHTML(c.artist)} · 학생 학습 화면</p></div><section class="quiz-card" style="margin-top:18px"><div class="eyebrow">Step 1 · 전체 음악 감상</div><h3>먼저 음악 전체를 들어보세요.</h3><p class="small">음악을 충분히 들은 뒤 아래 버튼을 누르면 교사가 지정한 가사 퀴즈가 열립니다.</p><audio id="student-audio" controls ${c.audioUrl ? `src="${c.audioUrl}"` : ''} style="width:100%;margin-top:10px"></audio><div class="progress" style="margin-top:13px"><span id="student-progress"></span></div><div class="actions"><button class="btn btn-primary" data-action="finish-listening">전체 음악 감상 완료 →</button></div></section><div id="quiz-area" class="${state.listeningComplete ? '' : 'hidden'}"></div></div>`;
+  app.innerHTML = `<div class="student-layout"><a href="#" class="back" data-action="student-entry">← 학생 번호 변경</a><div class="student-hero"><div class="eyebrow" style="color:#b9c9ff">Student room · ${escapeHTML(state.studentNumber)}번</div><h2>${escapeHTML(c.title)}</h2><p>${escapeHTML(c.artist)} · 학생 학습 화면</p></div><section class="quiz-card" style="margin-top:18px"><div class="eyebrow">Step 1 · 전체 음악 감상</div><h3>먼저 음악 전체를 들어보세요.</h3><p class="small">음악을 충분히 들은 뒤 아래 버튼을 누르면 교사가 지정한 가사 퀴즈가 열립니다.</p><audio id="student-audio" controls ${c.audioUrl ? `src="${c.audioUrl}"` : ''} style="width:100%;margin-top:10px"></audio><div class="progress" style="margin-top:13px"><span id="student-progress"></span></div><div class="actions"><button class="btn btn-primary" data-action="finish-listening">전체 음악 감상 완료 →</button></div></section><div id="quiz-area" class="${state.listeningComplete ? '' : 'hidden'}"></div><section class="panel" style="margin-top:18px"><div class="section-head"><div><h3>우리 반 순위</h3><p>점수는 학생 번호별로 기록됩니다.</p></div><span class="tag">${getLeaderboard().length}명 기록</span></div>${leaderboardHTML()}</section></div>`;
   bindActions(); const audio = document.querySelector('#student-audio'); audio.addEventListener('timeupdate', () => { document.querySelector('#student-progress').style.width = audio.duration ? `${audio.currentTime / audio.duration * 100}%` : '0%'; }); if (state.listeningComplete) renderQuizArea(c, target);
 }
 
@@ -69,8 +89,8 @@ function renderQuizArea(c, target) {
 
 function getInitials(text) { return [...text].map(char => { const code = char.charCodeAt(0) - 0xac00; if (code < 0 || code > 11171) return char === ' ' ? ' ' : char; return String.fromCharCode(0x1100 + Math.floor(code / 588)); }).join(''); }
 function finishListening() { state.listeningComplete = true; state.wrong = false; state.selectedAnswer = ''; state.usedHints = []; state.hintOrder = []; renderStudent(); }
-function submitLyric() { const c = contentForStudent(); const target = c.lyrics[c.quizLineIndex ?? demoContent.quizLineIndex] || c.lyrics[0]; const answer = state.selectedAnswer.trim().replace(/\s+/g, ' '); if (!answer) return alert('가사를 입력해주세요.'); if (answer === target.text.trim()) { state.score = state.wrong ? state.score : state.score + 10; state.wrong = false; alert(state.score === 10 ? '정답이에요! 10점 획득!' : '정답이에요!'); renderStudent(); } else { state.wrong = true; state.hintOrder = shuffle(['space', 'initial', 'slow'].filter(x => !state.usedHints.includes(x))); renderQuizArea(c, target); alert('아쉬워요. 힌트를 하나 골라 다시 도전해보세요.'); } }
+function submitLyric() { const c = contentForStudent(); const target = c.lyrics[c.quizLineIndex ?? demoContent.quizLineIndex] || c.lyrics[0]; const answer = state.selectedAnswer.trim().replace(/\s+/g, ' '); if (!answer) return alert('가사를 입력해주세요.'); if (answer === target.text.trim()) { state.score = state.wrong ? state.score : state.score + 10; saveRecord(); state.wrong = false; alert(state.score === 10 ? '정답이에요! 10점 획득!' : '정답이에요!'); renderStudent(); } else { state.wrong = true; state.hintOrder = shuffle(['space', 'initial', 'slow'].filter(x => !state.usedHints.includes(x))); renderQuizArea(c, target); alert('아쉬워요. 힌트를 하나 골라 다시 도전해보세요.'); } }
 function useHint(type, c) { if (state.usedHints.includes(type)) return; state.usedHints.push(type); if (type === 'slow') { const audio = document.querySelector('#student-audio'); if (audio) { audio.playbackRate = 0.75; audio.play().catch(() => {}); } } renderQuizArea(c, c.lyrics[c.quizLineIndex ?? demoContent.quizLineIndex] || c.lyrics[0]); }
 
-function bindActions() { document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', e => { e.preventDefault(); const a = button.dataset.action; if (a === 'home') goHome(); if (a === 'teacher') renderTeacher(); if (a === 'student') renderStudent(); if (a === 'to-sync') renderSync(); if (a === 'mark-line') markCurrentLine(); if (a === 'reset-sync') { state.teacherContent.lyrics.forEach((line, i) => { line.start = i * 4; line.end = i * 4 + 4; }); renderSync(); } if (a === 'save-content') saveContent(); if (a === 'finish-listening') finishListening(); if (a === 'submit-lyric') submitLyric(); })); }
+function bindActions() { document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', e => { e.preventDefault(); const a = button.dataset.action; if (a === 'home') goHome(); if (a === 'teacher') renderTeacher(); if (a === 'student') renderStudentEntry(); if (a === 'student-entry') renderStudentEntry(); if (a === 'enter-student') enterStudent(); if (a === 'to-sync') renderSync(); if (a === 'mark-line') markCurrentLine(); if (a === 'reset-sync') { state.teacherContent.lyrics.forEach((line, i) => { line.start = i * 4; line.end = i * 4 + 4; }); renderSync(); } if (a === 'save-content') saveContent(); if (a === 'finish-listening') finishListening(); if (a === 'submit-lyric') submitLyric(); })); }
 renderHome();
