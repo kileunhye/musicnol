@@ -73,6 +73,25 @@ async function resetSyncAndAudio() {
     alert(error.message || '음원 삭제에 실패했습니다.');
   }
 }
+async function resetTeacherAudio() {
+  const content = document.querySelector('#lyrics') ? getDraft() : state.teacherContent;
+  if (!content) return;
+  if (!confirm('현재 음원을 초기화하고 Supabase에 저장된 음원 파일도 삭제할까요?')) return;
+  try {
+    if (content.audioPath && window.musicStorage?.isConfigured()) await window.musicStorage.deleteAudio(content.audioPath);
+    if (content.audioUrl?.startsWith('blob:')) URL.revokeObjectURL(content.audioUrl);
+    state.pendingFile = null;
+    content.audioPath = '';
+    content.audioUrl = '';
+    content.fileName = '';
+    state.teacherContent = content;
+    localStorage.setItem('musicnol-content', JSON.stringify(content));
+    renderTeacher();
+    alert('음원을 초기화했습니다.');
+  } catch (error) {
+    alert(error.message || '음원 삭제에 실패했습니다.');
+  }
+}
 function getDraft() {
   const previous = state.teacherContent || {};
   const lines = document.querySelector('#lyrics').value.split('\n').map(x => x.trim()).filter(Boolean);
@@ -188,6 +207,17 @@ function renderSync() {
 const renderTeacherScreen = renderTeacher;
 renderTeacher = function () {
   renderTeacherScreen();
+  document.querySelector('[data-action="ai-analyze"]')?.remove();
+  const actions = document.querySelector('.actions');
+  if (actions && !document.querySelector('[data-action="reset-teacher-audio"]')) {
+    const resetButton = document.createElement('button');
+    resetButton.type = 'button';
+    resetButton.className = 'btn btn-danger';
+    resetButton.dataset.action = 'reset-teacher-audio';
+    resetButton.textContent = '음원 초기화 및 삭제';
+    resetButton.addEventListener('click', resetTeacherAudio);
+    actions.insertBefore(resetButton, actions.firstChild);
+  }
   const back = document.querySelector('.back[data-action="home"]');
   if (back) {
     back.textContent = '← 이전으로';
@@ -198,6 +228,8 @@ renderTeacher = function () {
 const renderSyncScreen = renderSync;
 renderSync = function () {
   renderSyncScreen();
+  const syncHelp = document.querySelector('.sync-help');
+  if (syncHelp) syncHelp.textContent = '아래 시간 입력칸에서 앞뒤 시간을 조금씩 조정할 수 있습니다.';
   const audioBox = document.querySelector('.audio-box');
   if (audioBox && !document.querySelector('[data-action="reset-sync-audio"]')) {
     const resetButton = document.createElement('button');
