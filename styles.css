@@ -228,6 +228,7 @@ h1 em { color: var(--blue-dark); }
 .character-choice span { font-size: 34px; line-height: 1; }
 .character-choice small { font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 15px; }
 .student-layout .student-nickname-field { margin-top: 30px; }
+.melody-change-page .student-nickname-field { margin-top: 30px; }
 .student-layout .student-character-picker { margin-top: 30px; }
 .student-layout .field { gap: 12px; }
 .student-layout .field-input { min-height: 64px; }

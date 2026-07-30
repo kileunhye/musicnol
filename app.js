@@ -34,6 +34,7 @@ state.studentCharacter = 'rabbit';
 
 function selectedStudentCharacter() { return studentCharacters.find(character => character.id === state.studentCharacter) || studentCharacters[0]; }
 function studentIdentityText() { const character = selectedStudentCharacter(); return `${character.emoji} ${state.studentNickname || '학생'} · ${character.name} · ${state.studentNumber}번`; }
+function melodyStudentIdentityText() { const character = selectedStudentCharacter(); return `${character.emoji} ${state.studentNickname || '학생'} · ${character.name} · ${state.melodyStudentNumber}번`; }
 
 function escapeHTML(value = '') { return String(value).replace(/[&<>'"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c])); }
 function formatTime(value) { const n = Number(value) || 0; return `${Math.floor(n / 60).toString().padStart(2, '0')}:${(n % 60).toFixed(1).padStart(4, '0')}`; }
@@ -778,7 +779,10 @@ function renderMelodyStudentEntry() {
   setAccount('멜로디 체인지 · 학생');
   const problems = getMelodyProblems();
   app.innerHTML = `<a href="#" class="back" data-action="melody-change">← 멜로디 체인지</a><section class="panel melody-change-page"><div class="eyebrow">FOREST MUSIC CLASS · STUDENT</div><h2>숲속 멜로디 무대에 도전해요!</h2><p>${problems.length ? `${problems.length}개의 멜로디 문제를 순서대로 풀고 총점을 기록합니다.` : '교사가 먼저 멜로디 문제를 저장해야 합니다.'}</p><div class="melody-stage-preview">🍃　🎵　🍃　🎶　🍃</div><div class="field"><label for="melody-student-number">학생 번호</label><input id="melody-student-number" class="field-input" inputmode="numeric" placeholder="예: 5" /></div><div class="actions"><button class="btn btn-primary" data-action="start-melody-game" ${problems.length ? '' : 'disabled'}>숲속 무대 시작하기 →</button></div></section>`;
-  document.querySelector('[data-action="start-melody-game"]')?.addEventListener('click', () => { state.melodyQuestionIndex = 0; state.melodyScores = {}; state.melodyStartedAt = 0; state.melodyElapsed = 0; });
+  const melodyNumberField = document.querySelector('#melody-student-number')?.closest('.field');
+  if (melodyNumberField) melodyNumberField.insertAdjacentHTML('afterend', `<div class="field student-nickname-field"><label for="melody-student-nickname">나의 닉네임</label><input id="melody-student-nickname" class="field-input" maxlength="12" placeholder="예: 숲속 음악왕" /></div><div class="student-character-picker melody-character-picker"><label>나의 동물 친구를 골라주세요</label><div class="character-grid">${studentCharacters.map((character, index) => `<button type="button" class="character-choice ${index === 0 ? 'selected' : ''}" data-character="${character.id}">${character.avatar ? `<img class="animal-face-icon" src="${character.avatar}" alt="${character.name}" />` : `<span>${character.emoji}</span>`}<small>${character.name}</small></button>`).join('')}</div></div>`);
+  document.querySelectorAll('.melody-character-picker .character-choice').forEach(button => button.addEventListener('click', () => { state.studentCharacter = button.dataset.character; document.querySelectorAll('.melody-character-picker .character-choice').forEach(item => item.classList.toggle('selected', item === button)); }));
+  document.querySelector('[data-action="start-melody-game"]')?.addEventListener('click', () => { const nickname = document.querySelector('#melody-student-nickname')?.value.trim(); if (!nickname) { document.querySelector('#melody-student-number').value = ''; alert('닉네임을 입력해주세요.'); return; } state.studentNickname = nickname; state.melodyQuestionIndex = 0; state.melodyScores = {}; state.melodyStartedAt = 0; state.melodyElapsed = 0; });
   bindActions();
 }
 
@@ -792,6 +796,7 @@ function renderMelodyGame() {
   const index = Number(state.melodyQuestionIndex || 0);
   const problem = problems[index];
   if (!problem) return renderMelodyFinal();
+  setAccount(`${melodyStudentIdentityText()} · 멜로디 체인지`);
   setAccount(`멜로디 체인지 · ${state.melodyStudentNumber}번`);
   clearInterval(state.melodyTimer);
   state.melodyProblemStartedAt = 0;
@@ -827,6 +832,7 @@ function renderMelodyGame() {
 function renderMelodyFinal() {
   clearInterval(state.melodyTimer);
   const total = Object.values(state.melodyScores || {}).reduce((sum, score) => sum + Number(score?.total ?? score ?? 0), 0);
+  setAccount(`${melodyStudentIdentityText()} · 멜로디 결과`);
   state.melodyElapsed = total;
   const records = getMelodyRecords().filter(record => record.studentNumber !== state.melodyStudentNumber);
   const record = { studentNumber: state.melodyStudentNumber, elapsed: Number(state.melodyElapsed.toFixed(1)), totalScore: total, problemScores: { ...(state.melodyScores || {}) }, updatedAt: new Date().toISOString() };
