@@ -161,7 +161,10 @@ window.musicStorage = {
       headers: { apikey: config.anonKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({ teacher_password: teacherPassword })
     });
-    if (!response.ok) throw new Error(`학생 데이터 초기화 실패 (${response.status})`);
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`학생 데이터 초기화 실패 (${response.status})${detail ? `: ${detail}` : ''}`);
+    }
   },
 
   async upsertMelodyRecord(record) {
