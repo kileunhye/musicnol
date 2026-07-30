@@ -286,6 +286,10 @@ function renderStudentEntry() {
   if (numberField) {
     numberField.insertAdjacentHTML('afterend', `<div class="field student-nickname-field"><label for="student-nickname">나의 닉네임</label><input id="student-nickname" class="field-input" maxlength="12" placeholder="예: 숲속 음악왕" /></div><div class="student-character-picker"><label>나의 동물 친구를 골라주세요</label><div class="character-grid">${studentCharacters.map((character, index) => `<button type="button" class="character-choice ${index === 0 ? 'selected' : ''}" data-character="${character.id}">${character.avatar ? `<img class="animal-face-icon" src="${character.avatar}" alt="${character.name}" />` : `<span>${character.emoji}</span>`}<small>${character.name}</small></button>`).join('')}</div></div>`);
   }
+  if (!document.querySelector('#student-nickname')) {
+    const fallbackAnchor = document.querySelector('.student-layout .quiz-card .notice');
+    fallbackAnchor?.insertAdjacentHTML('beforebegin', `<div class="field student-nickname-field"><label for="student-nickname">나의 닉네임</label><input id="student-nickname" class="field-input" maxlength="12" placeholder="예: 숲속 음악왕" /></div><div class="student-character-picker"><label>나의 동물 친구를 골라주세요</label><div class="character-grid">${studentCharacters.map((character, index) => `<button type="button" class="character-choice ${index === 0 ? 'selected' : ''}" data-character="${character.id}">${character.avatar ? `<img class="animal-face-icon" src="${character.avatar}" alt="${character.name}" />` : `<span>${character.emoji}</span>`}<small>${character.name}</small></button>`).join('')}</div></div>`);
+  }
   document.querySelectorAll('.character-choice').forEach(button => button.addEventListener('click', () => { state.studentCharacter = button.dataset.character; document.querySelectorAll('.character-choice').forEach(item => item.classList.toggle('selected', item === button)); }));
   const startButton = document.querySelector('[data-action="enter-student"]');
   if (startButton) startButton.textContent = '숲속 교실 들어가기 🌿';
