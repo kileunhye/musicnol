@@ -44,11 +44,15 @@ create table if not exists public.melody_records (
   elapsed numeric not null check (elapsed >= 0),
   total_score integer not null default 0,
   problem_scores jsonb not null default '{}'::jsonb,
+  nickname text,
+  character text,
   updated_at timestamptz not null default now()
 );
 
 alter table public.melody_records add column if not exists total_score integer not null default 0;
 alter table public.melody_records add column if not exists problem_scores jsonb not null default '{}'::jsonb;
+alter table public.melody_records add column if not exists nickname text;
+alter table public.melody_records add column if not exists character text;
 
 alter table public.melody_records enable row level security;
 

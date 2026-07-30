@@ -281,6 +281,21 @@ h3 { font-size: 30px; }
 .hero-art { margin-bottom: 62px; }
 .feature-grid { margin-top: 120px; }
 @media (max-width: 900px) { .hero { padding-bottom: 0; }.hero-art { margin-bottom: 82px; }.feature-grid { margin-top: 80px; } }
+.forest-ranking { overflow: hidden; margin-top: 14px; border: 3px solid #d4d8bc; border-radius: 24px; background: rgba(255,253,242,.9); box-shadow: 0 7px 0 rgba(103,125,82,.13); }
+.forest-ranking-title { padding: 16px 20px; color: #536f48; background: #edf3df; font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 24px; text-align: center; }
+.forest-ranking-list { display: grid; }
+.forest-ranking-row { display: grid; grid-template-columns: 42px 54px minmax(0,1fr) auto; align-items: center; gap: 12px; padding: 13px 16px; border-top: 1px solid #e2e5d1; }
+.forest-ranking-row.mine { background: #fff5ce; }
+.ranking-number { color: #8d7436; font-family: 'Jua', sans-serif; font-size: 24px; text-align: center; }
+.ranking-avatar { display: grid; place-items: center; width: 48px; height: 48px; border: 2px solid #c9d2b0; border-radius: 50%; background: #f8faee; overflow: hidden; }
+.ranking-emoji { font-size: 31px; }
+img.ranking-avatar { object-fit: cover; image-rendering: pixelated; }
+.ranking-person { display: grid; gap: 2px; min-width: 0; }
+.ranking-person b { overflow: hidden; color: #294336; font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 20px; text-overflow: ellipsis; white-space: nowrap; }
+.ranking-person span { color: #708273; font-size: 15px; }
+.ranking-score { color: #94702a; font-size: 20px; white-space: nowrap; }
+.forest-ranking-empty { padding: 28px 18px; border: 2px dashed #d4d8bc; border-radius: 18px; color: #708273; background: rgba(255,253,242,.8); font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 20px; line-height: 1.7; text-align: center; }
+@media (max-width: 600px) { .forest-ranking-row { grid-template-columns: 32px 44px minmax(0,1fr) auto; gap: 7px; padding: 11px 9px; }.ranking-avatar { width: 40px; height: 40px; }.ranking-person b { font-size: 17px; }.ranking-person span, .ranking-score { font-size: 14px; }.forest-ranking-title { font-size: 20px; } }
 
 /* Student quiz decorations and playful typography */
 body { font-family: 'Jua', 'Noto Sans KR', sans-serif; }

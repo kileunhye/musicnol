@@ -835,10 +835,10 @@ function renderMelodyFinal() {
   setAccount(`${melodyStudentIdentityText()} · 멜로디 결과`);
   state.melodyElapsed = total;
   const records = getMelodyRecords().filter(record => record.studentNumber !== state.melodyStudentNumber);
-  const record = { studentNumber: state.melodyStudentNumber, elapsed: Number(state.melodyElapsed.toFixed(1)), totalScore: total, problemScores: { ...(state.melodyScores || {}) }, updatedAt: new Date().toISOString() };
+  const record = { studentNumber: state.melodyStudentNumber, nickname: state.studentNickname || '학생', character: state.studentCharacter || 'rabbit', elapsed: Number(state.melodyElapsed.toFixed(1)), totalScore: total, problemScores: { ...(state.melodyScores || {}) }, updatedAt: new Date().toISOString() };
   records.push(record);
   localStorage.setItem('musicnol-melody-records', JSON.stringify(records));
-  window.musicStorage?.upsertMelodyRecord({ student_number: record.studentNumber, elapsed: record.elapsed, total_score: record.totalScore, problem_scores: record.problemScores, updated_at: record.updatedAt }).catch(error => console.warn(error));
+  window.musicStorage?.upsertMelodyRecord({ student_number: record.studentNumber, nickname: record.nickname, character: record.character, elapsed: record.elapsed, total_score: record.totalScore, problem_scores: record.problemScores, updated_at: record.updatedAt }).catch(error => console.warn(error));
   setAccount(`멜로디 체인지 결과 · ${state.melodyStudentNumber}번`);
   app.innerHTML = `<section class="panel melody-change-page melody-final"><div class="eyebrow">FOREST MUSIC CLASS · COMPLETE</div><div class="melody-stage-preview">✨ 🐿️ ✨ 🐻 ✨</div><h2>숲속 음악 대장 완성!</h2><p>3문제를 모두 푸는 데 ${formatSeconds(total)} 걸렸어요.</p><div class="melody-final-score"><strong>${formatSeconds(total)}</strong><span>총 해결 시간 · 짧을수록 높은 순위</span></div><div class="melody-ranking"><h3>숲속 음악 교실 순위</h3>${melodyRankingHTML()}</div><div class="actions"><button class="btn btn-primary" data-action="melody-student">다시 도전하기</button></div></section>`;
   bindActions();
@@ -882,7 +882,7 @@ async function syncRemoteMelodyContent() {
     const remote = await window.musicStorage.getClassContent();
     if (remote?.melodyContent) { state.melodyContent = remote.melodyContent; localStorage.setItem('musicnol-melody', JSON.stringify(remote.melodyContent)); }
     const rows = await window.musicStorage.listMelodyRecords();
-    localStorage.setItem('musicnol-melody-records', JSON.stringify(rows.map(row => ({ studentNumber: String(row.student_number), elapsed: Number(row.elapsed), totalScore: Number(row.total_score) || 0, problemScores: row.problem_scores || {}, updatedAt: row.updated_at }))));
+    localStorage.setItem('musicnol-melody-records', JSON.stringify(rows.map(row => ({ studentNumber: String(row.student_number), nickname: row.nickname || '학생', character: row.character || 'rabbit', elapsed: Number(row.elapsed), totalScore: Number(row.total_score) || 0, problemScores: row.problem_scores || {}, updatedAt: row.updated_at }))));
   } catch (error) { console.warn(error); }
 }
 
@@ -901,6 +901,19 @@ document.addEventListener('click', event => {
     if (record) window.musicStorage?.upsertMelodyRecord({ student_number: record.studentNumber, elapsed: Number(record.elapsed), updated_at: record.updatedAt || new Date().toISOString() }).catch(error => console.warn(error));
   }, 0);
 });
+
+function rankingCharacterHTML(record) {
+  const character = studentCharacters.find(item => item.id === (record.character || 'rabbit')) || studentCharacters[0];
+  return character.avatar ? `<img class="ranking-avatar" src="${character.avatar}" alt="${character.name}" />` : `<span class="ranking-avatar ranking-emoji">${character.emoji}</span>`;
+}
+
+function aggregateScoreRows(rows) { const records = {}; rows.forEach(row => { const studentNumber = String(row.student_number); records[studentNumber] ??= { studentNumber, nickname: row.nickname || '학생', character: row.character || 'rabbit', score: 0, stageScores: {}, stageHints: {}, updatedAt: row.updated_at }; records[studentNumber].stageScores[row.stage] = Number(row.score) || 0; records[studentNumber].stageHints[row.stage] = Number(row.hints_used) || 0; records[studentNumber].score += Number(row.score) || 0; records[studentNumber].nickname = row.nickname || records[studentNumber].nickname; records[studentNumber].character = row.character || records[studentNumber].character; records[studentNumber].updatedAt = row.updated_at; }); return Object.values(records); }
+
+async function saveRecord() { const records = getRecords().filter(record => record.studentNumber !== state.studentNumber); const record = { studentNumber: state.studentNumber, nickname: state.studentNickname || '학생', character: state.studentCharacter || 'rabbit', score: Object.values(state.stageScores).reduce((sum, score) => sum + score, 0), stageScores: { ...state.stageScores }, stageHints: { ...state.stageHints }, updatedAt: new Date().toISOString() }; records.push(record); state.score = record.score; localStorage.setItem('musicnol-records', JSON.stringify(records)); if (window.musicStorage?.isConfigured()) { try { await Promise.all(Object.entries(state.stageScores).map(([stage, score]) => window.musicStorage.upsertStudentScore({ student_number: state.studentNumber, stage: Number(stage), score: Number(score), hints_used: Number(state.stageHints[stage] || 0), nickname: record.nickname, character: record.character, updated_at: record.updatedAt }))); } catch (error) { console.warn(error); } } }
+
+function leaderboardHTML() { const records = getOverallLeaderboard(); if (!records.length) return '<div class="forest-ranking-empty">아직 숲속 무대의 기록이 없어요.<br>첫 번째 아티스트가 되어보세요! 🌿</div>'; return `<div class="forest-ranking"><div class="forest-ranking-title">🏆 우리 반 숲속 무대</div><div class="forest-ranking-list">${records.map((record, index) => `<div class="forest-ranking-row ${record.studentNumber === state.studentNumber ? 'mine' : ''}"><strong class="ranking-number">${index + 1}</strong>${rankingCharacterHTML(record)}<div class="ranking-person"><b>${escapeHTML(record.nickname || '학생')}</b><span>${escapeHTML(record.studentNumber)}번</span></div><strong class="ranking-score">${Number(record.score) || 0} pt</strong></div>`).join('')}</div></div>`; }
+
+function melodyRankingHTML() { const records = getMelodyRecords().sort((a, b) => (Number(a.totalScore ?? a.elapsed) || 0) - (Number(b.totalScore ?? b.elapsed) || 0)); if (!records.length) return '<div class="forest-ranking-empty">아직 멜로디 무대의 기록이 없어요.<br>첫 번째 아티스트가 되어보세요! 🎵</div>'; return `<div class="forest-ranking"><div class="forest-ranking-title">🏆 멜로디 체인지 숲속 무대</div><div class="forest-ranking-list">${records.map((record, index) => `<div class="forest-ranking-row ${record.studentNumber === state.melodyStudentNumber ? 'mine' : ''}"><strong class="ranking-number">${index + 1}</strong>${rankingCharacterHTML(record)}<div class="ranking-person"><b>${escapeHTML(record.nickname || '학생')}</b><span>${escapeHTML(record.studentNumber)}번</span></div><strong class="ranking-score">${formatSeconds(record.totalScore ?? record.elapsed)}</strong></div>`).join('')}</div></div>`; }
 
 (async function boot() {
   await syncRemoteContent();

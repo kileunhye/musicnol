@@ -3,9 +3,14 @@ create table if not exists public.student_scores (
   stage integer not null check (stage between 1 and 3),
   score integer not null default 0 check (score between 0 and 1000),
   hints_used integer not null default 0 check (hints_used between 0 and 3),
+  nickname text,
+  character text,
   updated_at timestamptz not null default now(),
   primary key (student_number, stage)
 );
+
+alter table public.student_scores add column if not exists nickname text;
+alter table public.student_scores add column if not exists character text;
 
 -- 기존 테이블이 예전 MVP의 0~10점 제한으로 만들어졌다면 제한을 합산 점수에 맞게 변경합니다.
 alter table public.student_scores drop constraint if exists student_scores_score_check;
