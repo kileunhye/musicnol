@@ -212,6 +212,13 @@ h1 em { color: var(--blue-dark); }
 .melody-final-score strong { color: #94702a; font-family: 'Jua', sans-serif; font-size: 48px; }
 .melody-final-score span { color: #8d7436; }
 @keyframes leaf-bounce { from { transform: translateY(0) rotate(-8deg); } to { transform: translateY(-6px) rotate(8deg); } }
+.melody-hint-fields { display: grid; gap: 8px; }
+.melody-hint-fields label { color: #6d8c58; font-family: 'Jua', 'Noto Sans KR', sans-serif; }
+.melody-hint-box { margin: 16px 0; padding: 14px; border: 2px dashed #e2c878; border-radius: 18px; background: #fff8d9; }
+.melody-penalty-line { display: flex; justify-content: space-between; align-items: center; color: #8d7436; font-size: 13px; }
+.melody-penalty-line strong { color: #d66e48; font-size: 18px; }
+.melody-hint-box .btn { margin-top: 10px; }
+.melody-hint { margin-top: 8px; color: #5d725f; background: #eaf4dc; border: 1px solid #b8d39c; }
 
 /* Student quiz decorations and playful typography */
 body { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
