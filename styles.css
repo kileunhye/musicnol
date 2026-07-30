@@ -227,6 +227,11 @@ h1 em { color: var(--blue-dark); }
 .character-choice.selected { border-color: var(--blue); background: #e8f1d9; box-shadow: 0 4px 0 #b8d39c; }
 .character-choice span { font-size: 34px; line-height: 1; }
 .character-choice small { font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 15px; }
+.student-layout .student-nickname-field { margin-top: 30px; }
+.student-layout .student-character-picker { margin-top: 30px; }
+.student-layout .field { gap: 12px; }
+.student-layout .field-input { min-height: 64px; }
+.character-choice[data-character="deer"] span { display: grid; place-items: start center; width: 42px; height: 38px; overflow: hidden; font-size: 52px; line-height: .75; transform: translateY(2px); }
 /* Readability scale for the children's interface */
 body { font-size: 18px; }
 .topbar-meta, .back, .eyebrow, .tag, .small, .field label, .upload-copy span, .feature p, .role-card p, .list-item p { font-size: 20px !important; }
