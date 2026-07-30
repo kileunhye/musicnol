@@ -21,7 +21,7 @@ const studentCharacters = [
   { id: 'owl', emoji: '🦉', name: '부엉이' },
   { id: 'tiger', emoji: '🐯', name: '호랑이' },
   { id: 'panda', emoji: '🐼', name: '판다' },
-  { id: 'deer', emoji: '🦌', name: '사슴' }
+  { id: 'deer', emoji: '🦌', name: '사슴', avatar: 'assets/deer-face.png' }
 ];
 
 const state = {
