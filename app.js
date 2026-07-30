@@ -81,7 +81,8 @@ function renderHome() {
     extraAction.className = 'extra-challenge-action';
     extraAction.innerHTML = '<span>숲속 특별 무대</span>';
     extraAction.append(homeMelodyButton);
-    homeActions.replaceChildren(mainActions, extraAction);
+    homeActions.replaceChildren(mainActions);
+    document.querySelector('.hero-art')?.append(extraAction);
   }
 }
 

@@ -261,6 +261,13 @@ h3 { font-size: 30px; }
 .extra-challenge-action span { color: #8c7330; font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 16px; }
 .extra-challenge-action .btn { padding: 13px 22px; font-size: 19px; }
 @media (max-width: 760px) { .hero-actions { overflow: visible; }.main-entry-actions { gap: 8px; }.main-entry-actions .btn { min-width: 0; padding: 15px 13px; font-size: 18px; }.extra-challenge-action .btn { font-size: 17px; } }
+.hero { grid-template-columns: minmax(0, 1.05fr) minmax(390px, .95fr); align-items: start; min-height: 590px; padding-bottom: 110px; gap: 48px; }
+.hero > div:first-child { padding-top: 24px; }
+.hero-art { overflow: visible; margin-top: 0; }
+.hero-art .extra-challenge-action { position: absolute; top: calc(100% + 18px); left: 50%; width: min(310px, 80%); transform: translateX(-50%); z-index: 4; border-top: 2px dashed #d8c67d; }
+.main-entry-actions { justify-content: center; }
+.main-entry-actions .btn { min-width: 220px; }
+@media (max-width: 900px) { .hero { grid-template-columns: 1fr; min-height: 0; padding-bottom: 110px; }.hero > div:first-child { padding-top: 0; }.hero-art { width: min(100%, 560px); margin: 0 auto 95px; }.main-entry-actions .btn { min-width: 190px; } }
 
 /* Student quiz decorations and playful typography */
 body { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
