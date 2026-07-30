@@ -193,6 +193,25 @@ h1 em { color: var(--blue-dark); }
 .forest-title-card span { color: #6b8f55; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
 .forest-title-card strong { color: #294336; font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 25px; }
 .forest-title-card em { color: #708273; font-size: 13px; font-style: normal; }
+.melody-problem-grid { display: grid; gap: 16px; margin-top: 24px; }
+.melody-problem-editor { padding: 18px; border: 2px solid #d9ddc6; border-radius: 20px; background: rgba(255,253,242,.8); text-align: left; }
+.melody-problem-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.melody-problem-heading h3 { margin: 0 0 3px; color: var(--blue-dark); font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 21px; }
+.melody-problem-heading p { margin: 0; color: var(--muted); font-size: 12px; }
+.melody-problem-number { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; color: #fffdf2; background: var(--blue); box-shadow: 0 4px 0 #3f7049; font-family: 'Jua', sans-serif; font-size: 22px; }
+.melody-progress { display: flex; justify-content: center; gap: 18px; margin: 16px 0 2px; }
+.melody-leaf { filter: grayscale(1); opacity: .3; font-size: 30px; transition: .3s; }
+.melody-leaf.done, .melody-leaf.current { filter: none; opacity: 1; }
+.melody-leaf.current { animation: leaf-bounce .8s ease-in-out infinite alternate; }
+.melody-progress-label { color: var(--blue-dark); font-size: 13px; font-weight: 700; text-align: center; }
+.melody-stage-preview { margin: 18px 0; color: #6d9b5e; font-size: 42px; letter-spacing: 10px; text-align: center; }
+.melody-transition { max-width: 680px; margin: 80px auto; text-align: center; }
+.melody-transition h2, .melody-final h2 { color: var(--blue-dark); font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 34px; }
+.melody-final { max-width: 760px; margin: 30px auto; text-align: center; }
+.melody-final-score { display: grid; gap: 2px; margin: 22px auto; padding: 18px; border-radius: 22px; background: #fff5ce; }
+.melody-final-score strong { color: #94702a; font-family: 'Jua', sans-serif; font-size: 48px; }
+.melody-final-score span { color: #8d7436; }
+@keyframes leaf-bounce { from { transform: translateY(0) rotate(-8deg); } to { transform: translateY(-6px) rotate(8deg); } }
 
 /* Student quiz decorations and playful typography */
 body { font-family: 'Jua', 'Noto Sans KR', sans-serif; }

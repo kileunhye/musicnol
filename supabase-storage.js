@@ -138,7 +138,7 @@ window.musicStorage = {
   async listMelodyRecords() {
     if (!this.isConfigured()) return [];
     const config = window.SUPABASE_CONFIG;
-    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/melody_records?select=student_number,elapsed,updated_at&order=elapsed.asc,student_number.asc`;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/melody_records?select=student_number,elapsed,total_score,problem_scores,updated_at&order=total_score.desc,elapsed.asc,student_number.asc`;
     const response = await fetch(endpoint, { headers: { apikey: config.anonKey } });
     if (!response.ok) throw new Error(`멜로디 기록 조회 실패 (${response.status})`);
     return response.json();
