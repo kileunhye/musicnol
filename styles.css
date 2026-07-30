@@ -14,6 +14,7 @@
   --coral: #ff8a72;
   --shadow: 0 18px 50px rgba(30, 47, 80, .08);
 }
+@font-face { font-family: 'KNPS Kkomi'; src: url('assets/KNPSKkomi.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
 
 * { box-sizing: border-box; }
 body { margin: 0; color: var(--ink); background: var(--bg); font-family: 'Noto Sans KR', 'DM Sans', sans-serif; }
@@ -183,6 +184,10 @@ h1 em { color: var(--blue-dark); }
 .student-layout .student-hero h2, .student-layout .quiz-card h3, .student-layout #quiz-area h3, .student-layout .panel h3, .section-head h2 { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
 .student-layout #student-number { border-color: #a8c398; background: #fffdf2; color: var(--blue-dark); }
 .student-layout #student-number::placeholder { color: #99aa8a; }
+.lyric-stage, .lyric-stage .current, .lyric-stage .next, .student-lyric-board, .student-lyric-line, #lyric-answer { font-family: 'KNPS Kkomi', 'Jua', 'Noto Sans KR', sans-serif; }
+.lyric-stage .current { letter-spacing: .02em; }
+.student-lyric-line { font-size: 20px; line-height: 1.55; }
+#lyric-answer { font-size: 21px; }
 
 /* Student quiz decorations and playful typography */
 body { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
