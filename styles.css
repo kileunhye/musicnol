@@ -254,6 +254,13 @@ h3 { font-size: 30px; }
 .hero-actions { flex-wrap: nowrap; align-items: center; gap: 10px; }
 .hero-actions .btn { flex: 0 1 auto; white-space: nowrap; font-size: 20px; padding-left: 17px; padding-right: 17px; }
 @media (max-width: 760px) { .hero-actions { overflow-x: auto; justify-content: flex-start; padding-bottom: 8px; }.hero-actions .btn { flex: 0 0 auto; font-size: 17px; padding-left: 13px; padding-right: 13px; }.hero h1 { font-size: clamp(43px, 11vw, 70px); letter-spacing: 0; }.hero-copy { font-size: 18px; letter-spacing: .02em; } }
+.hero-actions { display: grid; justify-items: center; gap: 22px; width: 100%; overflow: visible; }
+.main-entry-actions { display: flex; justify-content: center; align-items: center; gap: 16px; width: 100%; }
+.main-entry-actions .btn { min-width: 205px; padding: 20px 28px; font-size: 25px; }
+.extra-challenge-action { display: grid; justify-items: center; gap: 6px; padding: 10px 18px 0; border-top: 2px dashed #d8c67d; }
+.extra-challenge-action span { color: #8c7330; font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 16px; }
+.extra-challenge-action .btn { padding: 13px 22px; font-size: 19px; }
+@media (max-width: 760px) { .hero-actions { overflow: visible; }.main-entry-actions { gap: 8px; }.main-entry-actions .btn { min-width: 0; padding: 15px 13px; font-size: 18px; }.extra-challenge-action .btn { font-size: 17px; } }
 
 /* Student quiz decorations and playful typography */
 body { font-family: 'Jua', 'Noto Sans KR', sans-serif; }

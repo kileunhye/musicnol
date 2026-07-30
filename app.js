@@ -70,8 +70,19 @@ function renderHome() {
   const homeStudentButton = document.querySelector('.hero-actions [data-action="student-entry"]');
   const homeMelodyButton = document.querySelector('.hero-actions [data-action="melody-change"]');
   if (homeTeacherButton) homeTeacherButton.textContent = '교사로 시작하기';
-  if (homeStudentButton) homeStudentButton.textContent = '학생으로 참여하기';
-  if (homeMelodyButton) homeMelodyButton.textContent = '멜로디 체인지';
+  if (homeStudentButton) homeStudentButton.textContent = '학생으로 시작하기';
+  if (homeMelodyButton) homeMelodyButton.textContent = '도전! 멜로디 체인지';
+  const homeActions = document.querySelector('.hero-actions');
+  if (homeActions && homeTeacherButton && homeStudentButton && homeMelodyButton) {
+    const mainActions = document.createElement('div');
+    mainActions.className = 'main-entry-actions';
+    mainActions.append(homeTeacherButton, homeStudentButton);
+    const extraAction = document.createElement('div');
+    extraAction.className = 'extra-challenge-action';
+    extraAction.innerHTML = '<span>숲속 특별 무대</span>';
+    extraAction.append(homeMelodyButton);
+    homeActions.replaceChildren(mainActions, extraAction);
+  }
 }
 
 function getMelodyRecords() { return JSON.parse(localStorage.getItem('musicnol-melody-records') || '[]'); }
