@@ -152,6 +152,18 @@ window.musicStorage = {
     if (!response.ok) throw new Error(`멜로디 기록 초기화 실패 (${response.status})`);
   },
 
+  async resetStudentData(teacherPassword) {
+    if (!this.isConfigured()) return;
+    const config = window.SUPABASE_CONFIG;
+    const endpoint = `${config.url.replace(/\/$/, '')}/rest/v1/rpc/reset_student_data`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { apikey: config.anonKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teacher_password: teacherPassword })
+    });
+    if (!response.ok) throw new Error(`학생 데이터 초기화 실패 (${response.status})`);
+  },
+
   async upsertMelodyRecord(record) {
     if (!this.isConfigured()) return;
     const config = window.SUPABASE_CONFIG;

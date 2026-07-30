@@ -60,5 +60,21 @@ create policy "Anyone can update melody records"
 on public.melody_records for update to anon, authenticated using (true) with check (true);
 
 drop policy if exists "Anyone can delete melody records" on public.melody_records;
-create policy "Anyone can delete melody records"
-on public.melody_records for delete to anon, authenticated using (true);
+
+create or replace function public.reset_student_data(teacher_password text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if teacher_password <> '1234' then
+    raise exception 'invalid teacher password';
+  end if;
+  delete from public.student_scores;
+  delete from public.melody_records;
+end;
+$$;
+
+revoke all on function public.reset_student_data(text) from public;
+grant execute on function public.reset_student_data(text) to anon, authenticated;

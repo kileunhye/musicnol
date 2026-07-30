@@ -338,12 +338,14 @@ async function saveTeacherContent() {
 }
 
 async function resetStudentData() {
+  const password = window.prompt('학생 데이터를 초기화하려면 교사 비밀번호를 입력하세요.');
+  if (password !== '1234') {
+    if (password !== null) alert('비밀번호가 올바르지 않습니다. 초기화를 취소합니다.');
+    return;
+  }
   if (!confirm('학생들의 점수와 순위, 멜로디 체인지 기록을 모두 삭제하고 초기화할까요?')) return;
   try {
-    await Promise.all([
-      window.musicStorage?.clearStudentScores(),
-      window.musicStorage?.clearMelodyRecords()
-    ]);
+    await window.musicStorage?.resetStudentData(password);
     localStorage.removeItem('musicnol-records');
     localStorage.removeItem('musicnol-melody-records');
     state.score = 0;
