@@ -671,6 +671,7 @@ function renderMelodyTeacherUnlocked() {
     return `<article class="melody-problem-editor"><div class="melody-problem-heading"><span class="melody-problem-number">${index + 1}</span><div><h3>문제 ${index + 1}</h3><p>학생이 순서대로 풀 문제를 등록하세요.</p></div></div><div class="form-grid"><div class="field"><label for="melody-title-${index}">정답 멜로디 제목</label><input id="melody-title-${index}" class="field-input" value="${escapeHTML(problem.title || '')}" placeholder="예: 봄의 노래" /></div><div class="field"><label for="melody-points-${index}">배점</label><input id="melody-points-${index}" class="field-input" type="number" min="1" max="100" value="${Number(problem.points) || 10}" /></div><div class="field full"><label>문제 음원</label><div class="upload"><div class="album">♫</div><div class="upload-copy"><strong id="melody-file-name-${index}">${escapeHTML(problem.fileName || '문제 음원을 선택하세요')}</strong><span>정답 멜로디를 듣고 제목을 맞힙니다.</span></div><label class="btn btn-ghost" for="melody-audio-file-${index}">파일 선택</label><input id="melody-audio-file-${index}" data-problem-index="${index}" type="file" accept="audio/*" /></div></div></div></article>`;
   }).join('');
   app.innerHTML = `<a href="#" class="back" data-action="melody-change">← 멜로디 체인지</a><section class="panel melody-change-page melody-teacher-page"><div class="eyebrow">FOREST MUSIC CLASS · TEACHER</div><h2>멜로디 체인지 3문제 만들기</h2><p>문제 1부터 3까지 저장하면 학생이 순서대로 풀고 점수가 합산됩니다.</p><div class="melody-problem-grid">${cards}</div><div class="actions"><button class="btn btn-primary" data-action="save-melody">3문제 저장하기 🌿</button></div></section>`;
+  document.querySelectorAll('[id^="melody-points-"]').forEach(input => input.closest('.field')?.remove());
   state.pendingMelodyFiles = {};
   document.querySelectorAll('[data-problem-index]').forEach(input => input.addEventListener('change', event => {
     const index = Number(event.target.dataset.problemIndex);
@@ -688,13 +689,12 @@ async function saveMelodyContent() {
   try {
     for (let index = 0; index < 3; index += 1) {
       const title = document.querySelector(`#melody-title-${index}`)?.value.trim();
-      const points = Math.max(1, Number(document.querySelector(`#melody-points-${index}`)?.value) || 10);
       const file = state.pendingMelodyFiles?.[index];
       const old = previous[index] || {};
       if (!title && !file && !old.audioUrl) continue;
       if (!title) return alert(`문제 ${index + 1}의 정답 제목을 입력해주세요.`);
       if (!file && !old.audioUrl) return alert(`문제 ${index + 1}의 음원을 선택해주세요.`);
-      const problem = { id: index + 1, title, points, fileName: file?.name || old.fileName || '', audioPath: old.audioPath || '', audioUrl: old.audioUrl || '' };
+      const problem = { id: index + 1, title, fileName: file?.name || old.fileName || '', audioPath: old.audioPath || '', audioUrl: old.audioUrl || '' };
       if (file && window.musicStorage?.isConfigured()) {
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
         const uploaded = await window.musicStorage.uploadAudio(file, `melody/problem-${index + 1}-${Date.now()}-${safeName}`);
@@ -734,38 +734,56 @@ function renderMelodyGame() {
   if (!problem) return renderMelodyFinal();
   setAccount(`멜로디 체인지 · ${state.melodyStudentNumber}번`);
   clearInterval(state.melodyTimer);
-  app.innerHTML = `<a href="#" class="back" data-action="melody-student">← 학생 번호 변경</a><section class="panel melody-change-page melody-game-page"><div class="eyebrow">FOREST MUSIC CLASS · STAGE ${index + 1}</div><h2>멜로디 제목을 맞혀보세요!</h2>${melodyProgressHTML(index, problems.length)}<p>음악을 듣고 정답 제목을 입력하면 다음 무대로 자동 이동합니다.</p><div class="melody-timer" id="melody-timer">${formatSeconds(state.melodyElapsed)}</div><audio id="melody-audio" controls src="${escapeHTML(problem.audioUrl || '')}"></audio><div class="field full"><label for="melody-answer">문제 ${index + 1} 정답 멜로디</label><input id="melody-answer" class="field-input" placeholder="멜로디 제목을 입력하세요" /></div><div class="actions"><button class="btn btn-primary" data-action="submit-melody-answer">정답 제출 · ${problem.points}점</button></div><div id="melody-feedback"></div></section>`;
+  state.melodyProblemStartedAt = 0;
+  state.melodyProblemDuration = 0;
+  state.melodyProblemFinished = false;
+  app.innerHTML = `<a href="#" class="back" data-action="melody-student">← 학생 번호 변경</a><section class="panel melody-change-page melody-game-page"><div class="eyebrow">FOREST MUSIC CLASS · STAGE ${index + 1}</div><h2>멜로디 제목을 맞혀보세요!</h2>${melodyProgressHTML(index, problems.length)}<p>정답을 입력한 시간만큼 기록됩니다. 음원이 끝나면 해당 음원의 전체 시간이 기록돼요.</p><div class="melody-timer" id="melody-timer">${formatSeconds(state.melodyElapsed)}</div><audio id="melody-audio" controls src="${escapeHTML(problem.audioUrl || '')}"></audio><div class="field full"><label for="melody-answer">문제 ${index + 1} 정답 멜로디</label><input id="melody-answer" class="field-input" placeholder="멜로디 제목을 입력하세요" /></div><div class="actions"><button class="btn btn-primary" data-action="submit-melody-answer">정답 제출</button></div><div id="melody-feedback"></div></section>`;
   const audio = document.querySelector('#melody-audio');
-  audio.addEventListener('play', () => { if (!state.melodyStartedAt) state.melodyStartedAt = Date.now(); clearInterval(state.melodyTimer); state.melodyTimer = setInterval(() => { state.melodyElapsed = (Date.now() - state.melodyStartedAt) / 1000; const timer = document.querySelector('#melody-timer'); if (timer) timer.textContent = formatSeconds(state.melodyElapsed); }, 100); });
+  const updateTimer = () => { const elapsed = state.melodyProblemStartedAt ? (Date.now() - state.melodyProblemStartedAt) / 1000 : 0; const timer = document.querySelector('#melody-timer'); if (timer) timer.textContent = formatSeconds(elapsed); };
+  const beginProblem = () => { if (!state.melodyStartedAt) state.melodyStartedAt = Date.now(); if (!state.melodyProblemStartedAt) state.melodyProblemStartedAt = Date.now(); clearInterval(state.melodyTimer); state.melodyTimer = setInterval(updateTimer, 100); };
+  audio.addEventListener('loadedmetadata', () => { state.melodyProblemDuration = Number(audio.duration) || 0; });
+  audio.addEventListener('play', beginProblem);
+  audio.addEventListener('ended', () => completeMelodyProblem(false));
   bindActions();
 }
 
 function renderMelodyFinal() {
   clearInterval(state.melodyTimer);
   const total = Object.values(state.melodyScores || {}).reduce((sum, score) => sum + Number(score || 0), 0);
+  state.melodyElapsed = total;
   const records = getMelodyRecords().filter(record => record.studentNumber !== state.melodyStudentNumber);
   const record = { studentNumber: state.melodyStudentNumber, elapsed: Number(state.melodyElapsed.toFixed(1)), totalScore: total, problemScores: { ...(state.melodyScores || {}) }, updatedAt: new Date().toISOString() };
   records.push(record);
   localStorage.setItem('musicnol-melody-records', JSON.stringify(records));
   window.musicStorage?.upsertMelodyRecord({ student_number: record.studentNumber, elapsed: record.elapsed, total_score: record.totalScore, problem_scores: record.problemScores, updated_at: record.updatedAt }).catch(error => console.warn(error));
   setAccount(`멜로디 체인지 결과 · ${state.melodyStudentNumber}번`);
-  app.innerHTML = `<section class="panel melody-change-page melody-final"><div class="eyebrow">FOREST MUSIC CLASS · COMPLETE</div><div class="melody-stage-preview">✨ 🐿️ ✨ 🐻 ✨</div><h2>숲속 음악 대장 완성!</h2><p>${Math.floor(state.melodyElapsed / 60)}분 ${Math.floor(state.melodyElapsed % 60)}초 만에 3문제를 해결했어요.</p><div class="melody-final-score"><strong>${total}점</strong><span>총점</span></div><div class="melody-ranking"><h3>숲속 음악 교실 순위</h3>${melodyRankingHTML()}</div><div class="actions"><button class="btn btn-primary" data-action="melody-student">다시 도전하기</button></div></section>`;
+  app.innerHTML = `<section class="panel melody-change-page melody-final"><div class="eyebrow">FOREST MUSIC CLASS · COMPLETE</div><div class="melody-stage-preview">✨ 🐿️ ✨ 🐻 ✨</div><h2>숲속 음악 대장 완성!</h2><p>3문제를 모두 푸는 데 ${formatSeconds(total)} 걸렸어요.</p><div class="melody-final-score"><strong>${formatSeconds(total)}</strong><span>총 해결 시간 · 짧을수록 높은 순위</span></div><div class="melody-ranking"><h3>숲속 음악 교실 순위</h3>${melodyRankingHTML()}</div><div class="actions"><button class="btn btn-primary" data-action="melody-student">다시 도전하기</button></div></section>`;
   bindActions();
 }
 
-function melodyRankingHTML() { const records = getMelodyRecords().sort((a, b) => (Number(b.totalScore ?? b.score) || 0) - (Number(a.totalScore ?? a.score) || 0) || Number(a.elapsed) - Number(b.elapsed)); if (!records.length) return '<p class="small">아직 숲속 무대 기록이 없어요.</p>'; return `<div class="record-table"><div class="record-row record-head"><span>순위</span><span>학생 번호</span><span>점수</span></div>${records.map((record, index) => `<div class="record-row ${record.studentNumber === state.melodyStudentNumber ? 'mine' : ''}"><strong>${index + 1}</strong><span>${escapeHTML(record.studentNumber)}번</span><strong>${Number(record.totalScore ?? record.score) || 0}점</strong></div>`).join('')}</div>`; }
+function melodyRankingHTML() { const records = getMelodyRecords().sort((a, b) => (Number(a.totalScore ?? a.elapsed) || 0) - (Number(b.totalScore ?? b.elapsed) || 0)); if (!records.length) return '<p class="small">아직 숲속 무대 기록이 없어요.</p>'; return `<div class="record-table"><div class="record-row record-head"><span>순위</span><span>학생 번호</span><span>총 해결 시간</span></div>${records.map((record, index) => `<div class="record-row ${record.studentNumber === state.melodyStudentNumber ? 'mine' : ''}"><strong>${index + 1}</strong><span>${escapeHTML(record.studentNumber)}번</span><strong>${formatSeconds(record.totalScore ?? record.elapsed)}</strong></div>`).join('')}</div>`; }
+
+function completeMelodyProblem(correct) {
+  if (state.melodyProblemFinished) return;
+  const audio = document.querySelector('#melody-audio');
+  const duration = Number(state.melodyProblemDuration || audio?.duration || 0);
+  const elapsed = state.melodyProblemStartedAt ? (Date.now() - state.melodyProblemStartedAt) / 1000 : duration;
+  state.melodyProblemFinished = true;
+  clearInterval(state.melodyTimer);
+  state.melodyScores[state.melodyQuestionIndex] = Number(Math.min(duration || elapsed, elapsed || duration).toFixed(1));
+  if (Number(state.melodyQuestionIndex) + 1 >= getMelodyProblems().length) return renderMelodyFinal();
+  renderMelodyTransition();
+  setTimeout(() => { state.melodyQuestionIndex += 1; renderMelodyGame(); }, 900);
+}
 
 function submitMelodyAnswer() {
-  if (!state.melodyStartedAt) return alert('먼저 음원의 재생 버튼을 눌러주세요.');
+  if (!state.melodyProblemStartedAt) return alert('먼저 음원의 재생 버튼을 눌러주세요.');
   const answer = document.querySelector('#melody-answer')?.value.trim();
   if (!answer) return alert('멜로디 제목을 입력해주세요.');
   const problem = getMelodyProblems()[Number(state.melodyQuestionIndex || 0)];
   const feedback = document.querySelector('#melody-feedback');
   if (answer !== String(problem.title || '').trim()) { if (feedback) feedback.innerHTML = '<div class="notice melody-wrong">아쉬워요. 제목을 다시 생각해보세요.</div>'; return; }
-  state.melodyScores[state.melodyQuestionIndex] = Number(problem.points) || 10;
-  if (Number(state.melodyQuestionIndex) + 1 >= getMelodyProblems().length) return renderMelodyFinal();
-  renderMelodyTransition();
-  setTimeout(() => { state.melodyQuestionIndex += 1; renderMelodyGame(); }, 900);
+  completeMelodyProblem(true);
 }
 
 async function syncRemoteMelodyContent() {
