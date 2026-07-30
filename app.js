@@ -232,6 +232,12 @@ async function analyzeSyncWithAI() { const c = state.teacherContent; const analy
 function renderStudentEntry() {
   setAccount('학생 입장');
   app.innerHTML = `<div class="student-layout"><a href="#" class="back" data-action="home">← 홈으로</a><section class="student-hero"><div class="eyebrow" style="color:#b9c9ff">Student entrance</div><h2>내 번호로 입장하기</h2><p>선생님에게 받은 자기 번호를 입력하면 학습 기록과 순위가 저장됩니다.</p></section><section class="quiz-card" style="margin-top:22px"><div class="field"><label for="student-number">학생 번호</label><input id="student-number" class="field-input" inputmode="numeric" maxlength="4" placeholder="예: 12" /></div><div class="notice" style="margin-top:14px">번호는 이름 대신 기록을 구분하기 위한 값입니다. 같은 번호로 다시 입장하면 기존 점수가 업데이트됩니다.</div><div class="actions"><button class="btn btn-primary" data-action="enter-student">학습 시작하기 →</button></div></section><section class="panel" style="margin-top:18px"><h3>현재 순위</h3>${leaderboardHTML()}</section></div>`;
+  const forestEyebrow = document.querySelector('.student-hero .eyebrow');
+  if (forestEyebrow) forestEyebrow.textContent = 'FOREST MUSIC CLASS';
+  const startButton = document.querySelector('[data-action="enter-student"]');
+  if (startButton) startButton.textContent = '숲속 교실 들어가기 🌿';
+  const emptyBoard = document.querySelector('.empty');
+  if (emptyBoard) emptyBoard.textContent = '아직 숲속 무대의 연주 기록이 없어요. 첫 번째 아티스트가 되어보세요! 🐿️';
   bindActions(); document.querySelector('#student-number').focus();
 }
 

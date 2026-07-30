@@ -131,6 +131,59 @@ body { background-color: #f7ead2; background-image: linear-gradient(rgba(255, 24
 .single-quiz-lyrics .field { margin-top: 18px; }.single-quiz-lyrics textarea, .single-quiz-lyrics input { width: 100%; }.quiz-preview { display: grid; gap: 8px; margin-top: 20px; padding: 16px; border-radius: 14px; background: #fff8d9; color: #896b1f; }.quiz-preview span { color: var(--ink); font-size: 18px; font-weight: 700; }
 @media (max-width: 960px) { .quiz-side-decor { display: none; } }
 
+/* Forest music classroom visual system */
+:root {
+  --ink: #294336;
+  --muted: #708273;
+  --line: #d9ddc6;
+  --paper: #fffdf2;
+  --bg: #f4efdc;
+  --blue: #5b8d5b;
+  --blue-dark: #376642;
+  --blue-soft: #e8f1d9;
+  --yellow: #f4c95d;
+  --mint: #dcefdc;
+  --coral: #d98562;
+  --shadow: 0 18px 50px rgba(70, 82, 47, .15);
+}
+body { color: var(--ink); background-color: var(--bg); background-image: linear-gradient(rgba(255,252,232,.72), rgba(255,250,226,.84)), url('assets/forest-music-classroom.png'); background-size: cover; background-position: center top; background-attachment: fixed; }
+.app-shell { background: linear-gradient(90deg, rgba(255,252,232,.24), rgba(255,252,232,.03) 52%, rgba(255,252,232,.24)); }
+.topbar { background: rgba(255,253,241,.9); border-bottom-color: #d9ddc6; }
+.brand-mark { background: #d98562; box-shadow: 0 4px 0 #b9674b; }
+.status-dot { background: #6d9b5e; }
+.eyebrow { color: var(--blue-dark); }
+h1 em { color: var(--blue-dark); }
+.btn-primary { background: var(--blue); box-shadow: 0 7px 0 #3f7049; }
+.btn-primary:hover { background: var(--blue-dark); }
+.btn-ghost { color: var(--blue-dark); background: var(--blue-soft); }
+.btn-secondary { color: var(--ink); background: #fffdf2; border-color: var(--line); }
+.btn-melody { color: #664a24; background: #f6d875; box-shadow: 0 5px 0 #c5a449; }
+.hero-art { background-image: linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,.06)), url('assets/forest-music-classroom.png'); background-size: cover; background-position: center; border: 4px solid #fff8dc; box-shadow: 0 10px 0 #d7cda9; }
+.hero-art:before { background: #b8d39c; }
+.hero-art:after { background: #f4c95d; }
+.music-card, .panel, .quiz-card, .feature, .role-card { background: rgba(255,253,242,.94); border-color: #d9ddc6; box-shadow: 0 9px 25px rgba(70,82,47,.1); }
+.role-card:hover { border-color: var(--blue); }
+.role-icon { background: var(--blue-soft); color: var(--blue-dark); }
+.field input, .field textarea, .field-input { background: #fffdf4; border-color: #cfd6b9; color: var(--ink); }
+.field input:focus, .field textarea:focus, .field-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.notice { color: #5d725f; background: #edf4df; }
+.tag { background: var(--mint); color: #397049; }
+.student-hero { background: linear-gradient(135deg, #3f6846, #6e9560); border: 4px solid #f8f0ca; box-shadow: 0 9px 0 #b4b88c; }
+.student-hero .eyebrow { color: #e7f4d5 !important; }
+.lyric-stage { background: linear-gradient(145deg, #294b38, #476b49); border: 4px solid #f8f0ca; box-shadow: 0 8px 0 #b4b88c; }
+.student-lyric-board { background: #eef4df; }
+.student-lyric-line { background: #fffdf2; }
+.student-lyric-line.question-line { border-color: #d79d4f; background: #fff5ce; color: #9a6b29; }
+.progress span { background: var(--yellow); }
+.score-card { background: #fff5ce; border: 1px solid #ead38c; }
+.score { color: #94702a; }
+.record-table { border-color: #d9ddc6; background: #fffdf2; }
+.record-head { background: #edf1df; color: #66806a; }
+.record-row.mine { color: var(--blue-dark); background: var(--blue-soft); }
+.student-layout .student-hero h2, .student-layout .quiz-card h3, .student-layout #quiz-area h3, .student-layout .panel h3, .section-head h2 { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
+.student-layout #student-number { border-color: #a8c398; background: #fffdf2; color: var(--blue-dark); }
+.student-layout #student-number::placeholder { color: #99aa8a; }
+
 /* Student quiz decorations and playful typography */
 body { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
 .student-layout .student-hero h2,
