@@ -232,6 +232,7 @@ h1 em { color: var(--blue-dark); }
 .student-layout .field { gap: 12px; }
 .student-layout .field-input { min-height: 64px; }
 .character-choice[data-character="deer"] span { display: grid; place-items: start center; width: 42px; height: 38px; overflow: hidden; font-size: 52px; line-height: .75; transform: translateY(2px); }
+.deer-face-icon { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; object-position: center 38%; image-rendering: pixelated; }
 /* Readability scale for the children's interface */
 body { font-size: 18px; }
 .topbar-meta, .back, .eyebrow, .tag, .small, .field label, .upload-copy span, .feature p, .role-card p, .list-item p { font-size: 20px !important; }
