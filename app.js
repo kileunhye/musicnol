@@ -252,7 +252,19 @@ function renderStudent() {
   if (state.listeningComplete) {
     const layout = document.querySelector('.student-layout');
     if (layout) {
-      layout.insertAdjacentHTML('afterbegin', '<aside class="quiz-side-decor quiz-side-left" aria-hidden="true"><div class="side-animal-art side-cat-art"></div><div class="side-speech">귀를 쫑긋!<br><strong>잘 들어봐요</strong></div><div class="side-note">♪ ♫</div></aside><aside class="quiz-side-decor quiz-side-right" aria-hidden="true"><div class="side-animal-art side-bear-art"></div><div class="side-speech">할 수 있어요!<br><strong>화이팅 🌟</strong></div><div class="side-note">♫ ♪</div></aside>');
+      layout.insertAdjacentHTML('afterbegin', '<aside class="quiz-side-decor quiz-side-left" aria-hidden="true"><div class="side-animal-art side-cat-art"><video class="side-animal-video" muted loop playsinline preload="metadata" data-start="1.5"><source src="assets/quiz-animals.mp4" type="video/mp4"></video></div><div class="side-speech">귀를 쫑긋!<br><strong>잘 들어봐요</strong></div><div class="side-note">♪ ♫</div></aside><aside class="quiz-side-decor quiz-side-right" aria-hidden="true"><div class="side-animal-art side-bear-art"><video class="side-animal-video" muted loop playsinline preload="metadata" data-start="1.5"><source src="assets/quiz-animals.mp4" type="video/mp4"></video></div><div class="side-speech">할 수 있어요!<br><strong>화이팅 🌟</strong></div><div class="side-note">♫ ♪</div></aside>');
+      layout.querySelectorAll('.side-animal-video').forEach(video => {
+        const start = Number(video.dataset.start) || 1.5;
+        const playFromStart = () => {
+          if (video.duration && video.currentTime < start) video.currentTime = start;
+          video.play().catch(() => {});
+        };
+        video.addEventListener('loadedmetadata', playFromStart, { once: true });
+        video.addEventListener('timeupdate', () => {
+          if (video.duration && video.currentTime < start) playFromStart();
+        });
+        playFromStart();
+      });
     }
   }
   bindActions(); const audio = document.querySelector('#student-audio'); audio.addEventListener('timeupdate', () => { document.querySelector('#student-progress').style.width = audio.duration ? `${audio.currentTime / audio.duration * 100}%` : '0%'; const lines = c.lyrics; const index = lines.findIndex((line, i) => audio.currentTime >= line.start && audio.currentTime < (lines[i + 1]?.start ?? line.end ?? Infinity)); const current = index < 0 ? lines[0] : lines[index]; const next = lines[(index < 0 ? 0 : index) + 1]; document.querySelector('#student-progress').title = current?.noLyrics ? '♪ 간주 중' : (current?.text || ''); }); if (state.listeningComplete) renderQuizArea(c, target);
