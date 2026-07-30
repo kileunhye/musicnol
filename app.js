@@ -11,11 +11,29 @@ const demoContent = {
   ], quizLineIndex: 1, answer: '작은 배가 지나가요'
 };
 
+const studentCharacters = [
+  { id: 'rabbit', emoji: '🐰', name: '토끼' },
+  { id: 'bear', emoji: '🐻', name: '곰' },
+  { id: 'cat', emoji: '🐱', name: '고양이' },
+  { id: 'dog', emoji: '🐶', name: '강아지' },
+  { id: 'fox', emoji: '🦊', name: '여우' },
+  { id: 'squirrel', emoji: '🐿️', name: '다람쥐' },
+  { id: 'owl', emoji: '🦉', name: '부엉이' },
+  { id: 'penguin', emoji: '🐧', name: '펭귄' },
+  { id: 'panda', emoji: '🐼', name: '판다' },
+  { id: 'deer', emoji: '🦌', name: '사슴' }
+];
+
 const state = {
   teacherContent: JSON.parse(localStorage.getItem('musicnol-content') || 'null'), melodyContent: JSON.parse(localStorage.getItem('musicnol-melody') || 'null'), melodyStudentNumber: '', melodyStartedAt: 0, melodyElapsed: 0, melodyTimer: null, melodyResult: '',
   score: 0, stageScores: {}, stageHints: {}, studentNumber: '', selectedAnswer: '', stageOneAnswer: '', stageOneExpected: '', listeningComplete: false, wrong: false, celebration: false, quizResult: '', stageCompleted: false, quizStage: 1, syncHistory: [],
   usedHints: [], hintOrder: [], quizLineIndex: 0
 };
+state.studentNickname = '';
+state.studentCharacter = 'rabbit';
+
+function selectedStudentCharacter() { return studentCharacters.find(character => character.id === state.studentCharacter) || studentCharacters[0]; }
+function studentIdentityText() { const character = selectedStudentCharacter(); return `${character.emoji} ${state.studentNickname || '학생'} · ${character.name} · ${state.studentNumber}번`; }
 
 function escapeHTML(value = '') { return String(value).replace(/[&<>'"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c])); }
 function formatTime(value) { const n = Number(value) || 0; return `${Math.floor(n / 60).toString().padStart(2, '0')}:${(n % 60).toFixed(1).padStart(4, '0')}`; }
@@ -242,6 +260,11 @@ function renderStudentEntry() {
   app.innerHTML = `<div class="student-layout"><a href="#" class="back" data-action="home">← 홈으로</a><section class="student-hero"><div class="eyebrow" style="color:#b9c9ff">Student entrance</div><h2>내 번호로 입장하기</h2><p>선생님에게 받은 자기 번호를 입력하면 학습 기록과 순위가 저장됩니다.</p></section><section class="quiz-card" style="margin-top:22px"><div class="field"><label for="student-number">학생 번호</label><input id="student-number" class="field-input" inputmode="numeric" maxlength="4" placeholder="예: 12" /></div><div class="notice" style="margin-top:14px">번호는 이름 대신 기록을 구분하기 위한 값입니다. 같은 번호로 다시 입장하면 기존 점수가 업데이트됩니다.</div><div class="actions"><button class="btn btn-primary" data-action="enter-student">학습 시작하기 →</button></div></section><section class="panel" style="margin-top:18px"><h3>현재 순위</h3>${leaderboardHTML()}</section></div>`;
   const forestEyebrow = document.querySelector('.student-hero .eyebrow');
   if (forestEyebrow) forestEyebrow.textContent = 'FOREST MUSIC CLASS';
+  const numberField = document.querySelector('#student-number')?.closest('.field');
+  if (numberField) {
+    numberField.insertAdjacentHTML('afterend', `<div class="field student-nickname-field"><label for="student-nickname">나의 닉네임</label><input id="student-nickname" class="field-input" maxlength="12" placeholder="예: 숲속 음악왕" /></div><div class="student-character-picker"><label>나의 동물 친구를 골라주세요</label><div class="character-grid">${studentCharacters.map((character, index) => `<button type="button" class="character-choice ${index === 0 ? 'selected' : ''}" data-character="${character.id}"><span>${character.emoji}</span><small>${character.name}</small></button>`).join('')}</div></div>`);
+  }
+  document.querySelectorAll('.character-choice').forEach(button => button.addEventListener('click', () => { state.studentCharacter = button.dataset.character; document.querySelectorAll('.character-choice').forEach(item => item.classList.toggle('selected', item === button)); }));
   const startButton = document.querySelector('[data-action="enter-student"]');
   if (startButton) startButton.textContent = '숲속 교실 들어가기 🌿';
   const emptyBoard = document.querySelector('.empty');
@@ -256,13 +279,19 @@ function leaderboardHTML() {
 
 async function enterStudent() {
   const input = document.querySelector('#student-number'); const number = input?.value.trim();
+  const nickname = document.querySelector('#student-nickname')?.value.trim();
+  const character = selectedStudentCharacter();
   if (!number || !/^\d+$/.test(number)) return alert('학생 번호를 숫자로 입력해주세요.');
-  state.studentNumber = number; state.quizStage = 1; await syncRemoteRecords(); const record = getRecords().find(item => item.studentNumber === number); state.score = record?.score || 0; state.stageScores = record?.stageScores || {}; state.stageHints = record?.stageHints || {}; state.listeningComplete = false; state.wrong = false; state.celebration = false; state.quizResult = ''; state.stageCompleted = false; state.selectedAnswer = ''; state.stageOneAnswer = ''; state.stageOneExpected = ''; state.usedHints = []; state.hintOrder = []; renderStudent();
+  if (!nickname) return alert('닉네임을 입력해주세요.');
+  state.studentNumber = number; state.studentNickname = nickname; state.studentCharacter = character.id; state.quizStage = 1; await syncRemoteRecords(); const record = getRecords().find(item => item.studentNumber === number); state.score = record?.score || 0; state.stageScores = record?.stageScores || {}; state.stageHints = record?.stageHints || {}; state.listeningComplete = false; state.wrong = false; state.celebration = false; state.quizResult = ''; state.stageCompleted = false; state.selectedAnswer = ''; state.stageOneAnswer = ''; state.stageOneExpected = ''; state.usedHints = []; state.hintOrder = []; renderStudent();
 }
 
 function renderStudent() {
   setAccount('학생 체험 계정'); const c = contentForStudent(); const quizIndex = activeQuizIndex(c); const target = c.lyrics[quizIndex] || c.lyrics[0]; const celebration = ''; const listeningDone = state.listeningComplete;
   app.innerHTML = `<div class="student-layout"><a href="#" class="back" data-action="student-entry">← 학생 번호 변경</a><div class="student-hero"><div class="eyebrow" style="color:#b9c9ff">Student room · ${escapeHTML(state.studentNumber)}번</div><h2>${escapeHTML(c.title)}</h2><p>${escapeHTML(c.artist)} · 학생 학습 화면</p></div>${celebration}<section class="quiz-card" style="margin-top:18px"><div class="eyebrow">${listeningDone ? 'Step 1 · 문제 음악 듣기' : 'Step 1 · 전체 음악 듣기'}</div><h3>${listeningDone ? '이제 문제 음악을 들어보세요.' : '먼저 전체 음악을 들어보세요.'}</h3><p class="small">${listeningDone ? '문제 음악을 들은 뒤 아래 가사 퀴즈에 도전하세요.' : '음악을 충분히 들은 뒤 아래 버튼을 누르면 문제 음악과 가사 퀴즈가 열립니다.'}</p><audio id="student-audio" controls ${c.audioUrl ? `src="${c.audioUrl}"` : ''} style="width:100%;margin-top:10px"></audio><div class="progress" style="margin-top:13px"><span id="student-progress"></span></div><div class="actions"><button class="btn btn-primary" data-action="finish-listening">${listeningDone ? '문제 음악 감상 완료 →' : '전체 음악 감상 완료 →'}</button></div></section><div id="quiz-area" class="${state.listeningComplete ? '' : 'hidden'}"></div><section class="panel" style="margin-top:18px"><div class="section-head"><div><h3>우리 반 순위</h3><p>점수는 학생 번호별로 기록됩니다.</p></div><span class="tag">${getLeaderboard().length}명 기록</span></div>${leaderboardHTML()}</section></div>`;
+  setAccount(studentIdentityText());
+  const identityBadge = document.querySelector('.student-hero .eyebrow');
+  if (identityBadge) identityBadge.textContent = studentIdentityText();
   if (state.listeningComplete) {
     const layout = document.querySelector('.student-layout');
     if (layout) {

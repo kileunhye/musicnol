@@ -219,6 +219,29 @@ h1 em { color: var(--blue-dark); }
 .melody-penalty-line strong { color: #d66e48; font-size: 18px; }
 .melody-hint-box .btn { margin-top: 10px; }
 .melody-hint { margin-top: 8px; color: #5d725f; background: #eaf4dc; border: 1px solid #b8d39c; }
+.student-character-picker { margin-top: 18px; padding: 16px; border: 2px dashed #b8d39c; border-radius: 18px; background: #f4f8e9; }
+.student-character-picker > label { display: block; margin-bottom: 10px; color: var(--blue-dark); font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 19px; }
+.character-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.character-choice { display: grid; place-items: center; gap: 3px; min-height: 82px; padding: 8px 4px; border: 2px solid transparent; border-radius: 15px; color: var(--ink); background: #fffdf2; transition: transform .18s, border-color .18s, background .18s; }
+.character-choice:hover { transform: translateY(-3px); border-color: #a8c398; }
+.character-choice.selected { border-color: var(--blue); background: #e8f1d9; box-shadow: 0 4px 0 #b8d39c; }
+.character-choice span { font-size: 34px; line-height: 1; }
+.character-choice small { font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 15px; }
+/* Readability scale for the children's interface */
+body { font-size: 18px; }
+.topbar-meta, .back, .eyebrow, .tag, .small, .field label, .upload-copy span, .feature p, .role-card p, .list-item p { font-size: 20px !important; }
+.btn { padding: 16px 23px; font-size: 22px; border-radius: 16px; }
+.hero-copy, .panel p, .quiz-card p, .notice, .field input, .field textarea, .field-input { font-size: 22px; line-height: 1.65; }
+h1 { font-size: clamp(52px, 7vw, 92px); }
+h2 { font-size: clamp(38px, 5vw, 60px); }
+h3 { font-size: 30px; }
+.brand { font-size: 25px; }
+.brand-mark { width: 45px; height: 45px; font-size: 28px; }
+.student-hero h2 { font-size: 44px; }
+.student-hero p { font-size: 22px; }
+.record-row { font-size: 20px; padding: 16px 18px; }
+.record-head { font-size: 18px !important; }
+@media (max-width: 700px) { .character-grid { grid-template-columns: repeat(5, 1fr); gap: 4px; }.character-choice { min-height: 70px; }.character-choice span { font-size: 27px; }.character-choice small { font-size: 12px; }.btn { font-size: 18px; }.hero-copy, .panel p, .quiz-card p, .notice, .field input, .field textarea, .field-input { font-size: 18px; }.topbar-meta, .back, .eyebrow, .tag, .small, .field label, .upload-copy span, .feature p, .role-card p, .list-item p { font-size: 16px !important; } }
 
 /* Student quiz decorations and playful typography */
 body { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
