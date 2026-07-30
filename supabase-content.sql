@@ -71,8 +71,8 @@ begin
   if teacher_password <> '1234' then
     raise exception 'invalid teacher password';
   end if;
-  delete from public.student_scores;
-  delete from public.melody_records;
+  delete from public.student_scores where true;
+  delete from public.melody_records where true;
 end;
 $$;
 
