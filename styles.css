@@ -281,6 +281,15 @@ h3 { font-size: 30px; }
 .hero-art { margin-bottom: 62px; }
 .feature-grid { margin-top: 120px; }
 @media (max-width: 900px) { .hero { padding-bottom: 0; }.hero-art { margin-bottom: 82px; }.feature-grid { margin-top: 80px; } }
+
+/* Home alignment: place the media card level with the main headline and keep
+   the feature cards comfortably below the entry buttons. */
+.hero-art { margin-top: 66px; margin-bottom: 28px; }
+.feature-grid { margin-top: 72px; }
+@media (max-width: 900px) {
+  .hero-art { margin-top: 0; margin-bottom: 64px; }
+  .feature-grid { margin-top: 56px; }
+}
 .forest-ranking { overflow: hidden; margin-top: 14px; border: 3px solid #d4d8bc; border-radius: 24px; background: rgba(255,253,242,.9); box-shadow: 0 7px 0 rgba(103,125,82,.13); }
 .forest-ranking-title { padding: 16px 20px; color: #536f48; background: #edf3df; font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 24px; text-align: center; }
 .forest-ranking-list { display: grid; }
