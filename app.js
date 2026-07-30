@@ -71,7 +71,7 @@ function renderHome() {
   const homeMelodyButton = document.querySelector('.hero-actions [data-action="melody-change"]');
   if (homeTeacherButton) homeTeacherButton.textContent = '교사로 시작하기';
   if (homeStudentButton) homeStudentButton.textContent = '학생으로 시작하기';
-  if (homeMelodyButton) homeMelodyButton.textContent = '도전! 멜로디 체인지';
+  if (homeMelodyButton) homeMelodyButton.innerHTML = '<strong>도전!</strong><span>멜로디<br>체인지</span>';
   const homeActions = document.querySelector('.hero-actions');
   if (homeActions && homeTeacherButton && homeStudentButton && homeMelodyButton) {
     const mainActions = document.createElement('div');

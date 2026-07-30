@@ -270,6 +270,12 @@ h3 { font-size: 30px; }
 .main-entry-actions { justify-content: center; }
 .main-entry-actions .btn { min-width: 220px; }
 @media (max-width: 900px) { .hero { grid-template-columns: 1fr; min-height: 0; padding-bottom: 110px; }.hero > div:first-child { padding-top: 0; }.hero-art { width: min(100%, 560px); margin: 0 auto 95px; }.main-entry-actions .btn { min-width: 190px; } }
+.main-entry-actions .btn { min-width: 245px; min-height: 122px; padding: 24px 30px; font-size: 29px; line-height: 1.25; }
+.extra-challenge-action { min-width: 280px; padding: 12px 24px 0; }
+.extra-challenge-action .btn { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 250px; min-height: 108px; padding: 14px 24px; border-radius: 54px; line-height: 1.05; }
+.extra-challenge-action .btn strong { display: block; color: #604b20; font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 31px; letter-spacing: .02em; }
+.extra-challenge-action .btn span { display: block; margin-top: 5px; color: #735c2c; font-family: 'Jua', 'Noto Sans KR', sans-serif; font-size: 19px; letter-spacing: .06em; }
+@media (max-width: 760px) { .main-entry-actions .btn { min-width: 170px; min-height: 96px; padding: 18px 13px; font-size: 22px; }.extra-challenge-action .btn { width: 220px; min-height: 96px; }.extra-challenge-action .btn strong { font-size: 27px; }.extra-challenge-action .btn span { font-size: 17px; } }
 
 /* Student quiz decorations and playful typography */
 body { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
