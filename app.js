@@ -62,6 +62,16 @@ function renderHome() {
   bindActions();
   const teacherButton = document.querySelector('[data-action="teacher"]');
   if (teacherButton) { teacherButton.title = '교사 비밀번호가 필요합니다'; teacherButton.textContent = '교사로 시작하기 🔒'; teacherButton.dataset.action = 'teacher-home'; }
+  const heroTitle = document.querySelector('.hero h1');
+  if (heroTitle) heroTitle.innerHTML = '음악을 듣는 순간,<br><em>무대가 된 교실</em>';
+  const heroCopy = document.querySelector('.hero-copy');
+  if (heroCopy) heroCopy.innerHTML = '교사는 음악과 가사를 직접 준비하고,<br>학생은 노래를 듣고 따라 부르며<br>즐겁게 배웁니다.<br>귀여운 퀴즈와 힌트로 음악 시간이 더 기다려져요.';
+  const homeTeacherButton = document.querySelector('.hero-actions [data-action="teacher-home"], .hero-actions [data-action="teacher"]');
+  const homeStudentButton = document.querySelector('.hero-actions [data-action="student-entry"]');
+  const homeMelodyButton = document.querySelector('.hero-actions [data-action="melody-change"]');
+  if (homeTeacherButton) homeTeacherButton.textContent = '교사로 시작하기';
+  if (homeStudentButton) homeStudentButton.textContent = '학생으로 참여하기';
+  if (homeMelodyButton) homeMelodyButton.textContent = '멜로디 체인지';
 }
 
 function getMelodyRecords() { return JSON.parse(localStorage.getItem('musicnol-melody-records') || '[]'); }

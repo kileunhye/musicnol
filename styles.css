@@ -242,6 +242,12 @@ h3 { font-size: 30px; }
 .record-row { font-size: 20px; padding: 16px 18px; }
 .record-head { font-size: 18px !important; }
 @media (max-width: 700px) { .character-grid { grid-template-columns: repeat(5, 1fr); gap: 4px; }.character-choice { min-height: 70px; }.character-choice span { font-size: 27px; }.character-choice small { font-size: 12px; }.btn { font-size: 18px; }.hero-copy, .panel p, .quiz-card p, .notice, .field input, .field textarea, .field-input { font-size: 18px; }.topbar-meta, .back, .eyebrow, .tag, .small, .field label, .upload-copy span, .feature p, .role-card p, .list-item p { font-size: 16px !important; } }
+.hero h1 { max-width: 760px; margin-bottom: 24px; letter-spacing: .02em; line-height: 1.15; word-break: keep-all; }
+.hero h1 em { letter-spacing: .01em; }
+.hero-copy { font-family: 'Noto Sans KR', sans-serif; font-size: 21px; font-weight: 500; letter-spacing: .035em; line-height: 1.9; word-break: keep-all; }
+.hero-actions { flex-wrap: nowrap; align-items: center; gap: 10px; }
+.hero-actions .btn { flex: 0 1 auto; white-space: nowrap; font-size: 20px; padding-left: 17px; padding-right: 17px; }
+@media (max-width: 760px) { .hero-actions { overflow-x: auto; justify-content: flex-start; padding-bottom: 8px; }.hero-actions .btn { flex: 0 0 auto; font-size: 17px; padding-left: 13px; padding-right: 13px; }.hero h1 { font-size: clamp(43px, 11vw, 70px); letter-spacing: 0; }.hero-copy { font-size: 18px; letter-spacing: .02em; } }
 
 /* Student quiz decorations and playful typography */
 body { font-family: 'Jua', 'Noto Sans KR', sans-serif; }
