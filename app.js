@@ -356,6 +356,7 @@ function renderQuizArea(c, target) {
 function getInitials(text) { return [...text].map(char => { const code = char.charCodeAt(0) - 0xac00; if (code < 0 || code > 11171) return char === ' ' ? ' ' : char; return String.fromCharCode(0x1100 + Math.floor(code / 588)); }).join(''); }
 function finishListening() { state.listeningComplete = true; state.wrong = false; state.selectedAnswer = ''; state.usedHints = []; state.hintOrder = []; state.slowHintPenalty = 0; renderStudent(); }
 function slowLyricHint() {
+  if (!window.confirm('0.75배속 힌트를 보면 3점이 깎여요.\n힌트가 정말 필요한가요?')) return;
   const audio = document.querySelector('#student-audio');
   if (audio) { audio.playbackRate = 0.75; audio.play().catch(() => {}); }
   state.slowHintPenalty = (state.slowHintPenalty || 0) + 3;
