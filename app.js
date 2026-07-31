@@ -27,7 +27,7 @@ const studentCharacters = [
 const state = {
   teacherContent: JSON.parse(localStorage.getItem('musicnol-content') || 'null'), melodyContent: JSON.parse(localStorage.getItem('musicnol-melody') || 'null'), melodyStudentNumber: '', melodyStartedAt: 0, melodyElapsed: 0, melodyTimer: null, melodyResult: '',
   score: 0, stageScores: {}, stageHints: {}, studentNumber: '', selectedAnswer: '', stageOneAnswer: '', stageOneExpected: '', listeningComplete: false, wrong: false, celebration: false, quizResult: '', stageCompleted: false, quizStage: 1, syncHistory: [],
-  usedHints: [], hintOrder: [], quizLineIndex: 0
+  usedHints: [], hintOrder: [], slowHintPenalty: 0, quizLineIndex: 0
 };
 state.studentNickname = '';
 state.studentCharacter = 'rabbit';
@@ -310,7 +310,7 @@ async function enterStudent() {
   const character = selectedStudentCharacter();
   if (!number || !/^\d+$/.test(number)) return alert('학생 번호를 숫자로 입력해주세요.');
   if (!nickname) return alert('닉네임을 입력해주세요.');
-  state.studentNumber = number; state.studentNickname = nickname; state.studentCharacter = character.id; state.quizStage = 1; await syncRemoteRecords(); const record = getRecords().find(item => item.studentNumber === number); state.score = record?.score || 0; state.stageScores = record?.stageScores || {}; state.stageHints = record?.stageHints || {}; state.listeningComplete = false; state.wrong = false; state.celebration = false; state.quizResult = ''; state.stageCompleted = false; state.selectedAnswer = ''; state.stageOneAnswer = ''; state.stageOneExpected = ''; state.usedHints = []; state.hintOrder = []; renderStudent();
+  state.studentNumber = number; state.studentNickname = nickname; state.studentCharacter = character.id; state.quizStage = 1; await syncRemoteRecords(); const record = getRecords().find(item => item.studentNumber === number); state.score = record?.score || 0; state.stageScores = record?.stageScores || {}; state.stageHints = record?.stageHints || {}; state.listeningComplete = false; state.wrong = false; state.celebration = false; state.quizResult = ''; state.stageCompleted = false; state.selectedAnswer = ''; state.stageOneAnswer = ''; state.stageOneExpected = ''; state.usedHints = []; state.hintOrder = []; state.slowHintPenalty = 0; renderStudent();
 }
 
 function renderStudent() {
@@ -351,10 +351,17 @@ function renderQuizArea(c, target) {
   area.querySelector('.stage-tabs')?.remove();
   bindActions(); document.querySelector('#lyric-answer').addEventListener('input', e => state.selectedAnswer = e.target.value);
   document.querySelectorAll('.hint-button').forEach(b => b.addEventListener('click', () => useHint(b.dataset.hint, c)));
-  document.querySelectorAll('.student-stage-button').forEach(b => b.addEventListener('click', () => { state.quizStage = Number(b.dataset.stage); state.selectedAnswer = ''; state.wrong = false; state.usedHints = []; state.hintOrder = []; renderStudent(); }));
+  document.querySelectorAll('.student-stage-button').forEach(b => b.addEventListener('click', () => { state.quizStage = Number(b.dataset.stage); state.selectedAnswer = ''; state.wrong = false; state.usedHints = []; state.hintOrder = []; state.slowHintPenalty = 0; renderStudent(); }));
 }
 function getInitials(text) { return [...text].map(char => { const code = char.charCodeAt(0) - 0xac00; if (code < 0 || code > 11171) return char === ' ' ? ' ' : char; return String.fromCharCode(0x1100 + Math.floor(code / 588)); }).join(''); }
-function finishListening() { state.listeningComplete = true; state.wrong = false; state.selectedAnswer = ''; state.usedHints = []; state.hintOrder = []; renderStudent(); }
+function finishListening() { state.listeningComplete = true; state.wrong = false; state.selectedAnswer = ''; state.usedHints = []; state.hintOrder = []; state.slowHintPenalty = 0; renderStudent(); }
+function slowLyricHint() {
+  const audio = document.querySelector('#student-audio');
+  if (audio) { audio.playbackRate = 0.75; audio.play().catch(() => {}); }
+  state.slowHintPenalty = (state.slowHintPenalty || 0) + 3;
+  const score = document.querySelector('.score');
+  if (score) score.textContent = `${state.score - state.slowHintPenalty} pt`;
+}
 function submitLyric() { const c = contentForStudent(); const target = c.lyrics[activeQuizIndex(c)] || c.lyrics[0]; const expected = (target.blankText || target.text).replace(/\s/g, ''); const answer = state.selectedAnswer.replace(/\s/g, ''); if (!answer) return alert('가사를 입력해주세요.'); const correctCharacters = [...expected].reduce((score, character, index) => score + (answer[index] === character ? 1 : 0), 0); const stageScore = correctCharacters * 3; state.stageScores[state.quizStage] = stageScore; state.stageHints[state.quizStage] = 0; state.score = Object.values(state.stageScores).reduce((sum, value) => sum + value, 0); saveRecord(); state.wrong = false; state.stageCompleted = true; state.quizResult = answer === expected ? 'success' : 'miss'; state.celebration = true; renderStudent(); }
 function useHint(type, c) { if (state.usedHints.includes(type)) return; state.usedHints.push(type); if (type === 'slow') { const audio = document.querySelector('#student-audio'); if (audio) { audio.playbackRate = 0.75; audio.play().catch(() => {}); } } renderQuizArea(c, c.lyrics[activeQuizIndex(c)] || c.lyrics[0]); }
 
@@ -497,7 +504,13 @@ function renderQuizAreaWithBlanks(c, target) {
   const stageTwoAnswer = isStageTwo ? stageTwoExpected(state.stageOneExpected, state.stageOneAnswer) : '';
   const lyricBoard = c.lyrics.map((line, index) => { const isQuestion = index === quizIndex; let text = line.noLyrics ? '♪ 간주 중' : isQuestion ? (isStageTwo ? stageTwoMaskedLyric(line.text, line.blankText, state.stageOneAnswer) : blankedLyric(line.text, line.blankText)) : visibility === 'hide-all' ? '？ ？ ？' : line.text; return `<div class="student-lyric-line ${isQuestion ? 'question-line' : ''}">${escapeHTML(text)}</div>`; }).join('');
   area.innerHTML = `<section class="lyric-stage"><div><div class="eyebrow" style="color:#b9c9ff">Step ${isStageTwo ? 3 : 2} · 가사 맞히기</div><div class="current">${isStageTwo ? '별표(*)로 표시된 글자만 순서대로 다시 입력해보세요' : '교사가 지정한 빈칸 가사를 맞혀보세요'}</div><div class="next">${isStageTwo ? '맞힌 글자마다 2점을 추가로 받아요.' : '한 글자를 맞힐 때마다 3점을 받아요.'}</div></div></section><section class="quiz-card"><div class="student-lyric-board"><div class="small">${isStageTwo ? '1단계에서 맞힌 글자는 보이고, 틀린 글자는 *로 표시됩니다.' : '밑줄이 문제로 비워진 가사 부분입니다.'}</div>${lyricBoard}</div><h3>${isStageTwo ? '틀린 글자만 다시 입력' : '비워진 가사 입력'}</h3><input id="lyric-answer" class="field-input" placeholder="${isStageTwo ? '별표 글자만 순서대로 입력하세요' : '들었던 가사를 입력하세요'}" value="${escapeHTML(state.selectedAnswer)}" /><div class="actions"><button class="btn btn-primary" data-action="submit-lyric">정답 제출</button></div></section><div class="score-card"><div><strong>나의 점수</strong><div class="small">${isStageTwo ? `2단계는 맞힌 글자마다 2점이 추가됩니다. (${stageTwoAnswer.length}글자)` : '1단계는 맞힌 글자마다 3점입니다.'}</div></div><span class="score">${state.score} pt</span></div>`;
-  bindActions(); document.querySelector('#lyric-answer').addEventListener('input', e => state.selectedAnswer = e.target.value);
+  bindActions();
+  document.querySelector('#lyric-answer').addEventListener('input', e => state.selectedAnswer = e.target.value);
+  const submitButton = document.querySelector('[data-action="submit-lyric"]');
+  if (submitButton) {
+    submitButton.insertAdjacentHTML('afterend', '<button class="btn slow-hint-button" type="button">0.75배속<br><small>으로 듣기</small></button>');
+    document.querySelector('.slow-hint-button')?.addEventListener('click', slowLyricHint);
+  }
 }
 
 function submitLyricWithBlank() {
@@ -509,10 +522,10 @@ function submitLyricWithBlank() {
   if (state.quizStage === 1) {
     state.stageOneAnswer = answer;
     state.stageOneExpected = expected;
-    state.stageScores[1] = correctCharacters * 3;
+    state.stageScores[1] = correctCharacters * 3 - state.slowHintPenalty;
     state.stageHints[1] = 0;
   } else {
-    state.stageScores[2] = correctCharacters * 2;
+    state.stageScores[2] = correctCharacters * 2 - state.slowHintPenalty;
     state.stageHints[2] = 0;
   }
   state.score = Object.values(state.stageScores).reduce((sum, value) => sum + value, 0);
@@ -569,7 +582,7 @@ renderStudent = function () {
     document.body.appendChild(modal);
     modal.querySelector('.stage-result-close').addEventListener('click', () => modal.remove());
     modal.querySelector('.stage-result-confirm').addEventListener('click', () => modal.remove());
-    modal.querySelector('.stage-two-start')?.addEventListener('click', () => { modal.remove(); state.quizStage = 2; state.stageCompleted = false; state.quizResult = ''; state.celebration = false; state.selectedAnswer = ''; renderStudent(); });
+    modal.querySelector('.stage-two-start')?.addEventListener('click', () => { modal.remove(); state.quizStage = 2; state.stageCompleted = false; state.quizResult = ''; state.celebration = false; state.selectedAnswer = ''; state.slowHintPenalty = 0; renderStudent(); });
     document.querySelector('#lyric-answer')?.setAttribute('disabled', 'disabled');
     document.querySelector('[data-action="submit-lyric"]')?.setAttribute('disabled', 'disabled');
     const quizCard = document.querySelector('.quiz-card');

@@ -295,6 +295,9 @@ h3 { font-size: 30px; }
 .forest-ranking-list { display: grid; }
 .forest-ranking-row { display: grid; grid-template-columns: 42px 54px minmax(0,1fr) auto; align-items: center; gap: 12px; padding: 13px 16px; border-top: 1px solid #e2e5d1; }
 .forest-ranking-row.mine { background: #fff5ce; }
+.slow-hint-button { width: 96px; height: 96px; padding: 10px; border-radius: 50%; color: #5d7542; background: #fff2a8; border: 3px solid #d8c467; box-shadow: 0 5px 0 #c6ad52; font-size: 15px; line-height: 1.1; }
+.slow-hint-button small { display: block; margin-top: 3px; font-size: 12px; }
+.slow-hint-button:hover { background: #ffe98a; }
 .ranking-number { color: #8d7436; font-family: 'Jua', sans-serif; font-size: 24px; text-align: center; }
 .ranking-avatar { display: grid; place-items: center; width: 48px; height: 48px; border: 2px solid #c9d2b0; border-radius: 50%; background: #f8faee; overflow: hidden; }
 .ranking-emoji { font-size: 31px; }
